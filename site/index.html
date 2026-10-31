@@ -8,7 +8,7 @@
     <meta property="og:title" content="KAREN — local agent hub" />
     <meta property="og:description" content="A local agent that runs on your machine, remembers, and does the work." />
     <meta property="og:type" content="website" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2308080a'/><text x='50' y='68' font-size='58' font-family='Arial' font-weight='bold' fill='%23e11d2e' text-anchor='middle'>K</text></svg>" />
+    <link rel="icon" type="image/svg+xml" href="assets/karen-mark.svg" />
     <style>
       :root {
         --bg: #08080a;
@@ -86,6 +86,7 @@
       @keyframes spin { to { transform: rotate3d(0, 1, 0.25, 360deg) rotateX(70deg); } }
       .orb b { font-size: 30px; letter-spacing: 0.34em; color: #ffd9dd; text-shadow: 0 0 26px rgba(255, 90, 102, 0.6); }
       .orb small { position: absolute; bottom: 24%; font-size: 10px; letter-spacing: 0.18em; color: #c98a91; }
+      .orb-mark { width: 100%; height: auto; border-radius: 50%; position: relative; z-index: 1; }
 
       section { padding: 46px 0; }
       h2 { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: #b9868c; margin: 0 0 22px; }
@@ -179,7 +180,7 @@
               Once installed, the app downloads its own updates.
             </p>
           </div>
-          <div class="orb"><b>KAREN</b><small>second brain</small></div>
+          <div class="orb"><img class="orb-mark" src="assets/karen-mark.svg" alt="KAREN mark" width="380" height="380" /></div>
         </section>
 
         <section id="demo">

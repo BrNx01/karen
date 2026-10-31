@@ -16,6 +16,7 @@
   },
   "homepage": "https://brnx01.github.io/karen/",
   "scripts": {
+    "icon": "node scripts/make-icon.mjs",
     "test": "vitest run",
     "build": "tsc -p tsconfig.build.json && npm run app:build",
     "app:build": "vite build --config app/vite.config.ts",

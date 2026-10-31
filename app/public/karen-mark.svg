@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="KAREN">
+  <defs>
+    <radialGradient id="karen-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffe0e3"/>
+      <stop offset="0.55" stop-color="#ff5a66"/>
+      <stop offset="1" stop-color="#e11d2e"/>
+    </radialGradient>
+    <radialGradient id="karen-bloom" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#5a0c14" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#08080a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="#08080a"/>
+  <circle cx="256" cy="256" r="300" fill="url(#karen-bloom)"/>
+  <circle cx="256" cy="256" r="208" fill="none" stroke="#e11d2e" stroke-width="3" opacity="0.75"/>
+  <circle cx="256" cy="256" r="166" fill="none" stroke="#ff5a66" stroke-width="4" opacity="0.5"/>
+  <path d="M393.8 263.6A138 138 0 0 1 391.1 284.3M387.1 299.0A138 138 0 0 1 379.1 318.3M371.5 331.5A138 138 0 0 1 358.8 348.1M348.1 358.8A138 138 0 0 1 331.5 371.5M318.3 379.1A138 138 0 0 1 299.0 387.1M284.3 391.1A138 138 0 0 1 263.6 393.8M248.4 393.8A138 138 0 0 1 227.7 391.1M213.0 387.1A138 138 0 0 1 193.7 379.1M180.5 371.5A138 138 0 0 1 163.9 358.8M153.2 348.1A138 138 0 0 1 140.5 331.5M132.9 318.3A138 138 0 0 1 124.9 299.0M120.9 284.3A138 138 0 0 1 118.2 263.6M118.2 248.4A138 138 0 0 1 120.9 227.7M124.9 213.0A138 138 0 0 1 132.9 193.7M140.5 180.5A138 138 0 0 1 153.2 163.9M163.9 153.2A138 138 0 0 1 180.5 140.5M193.7 132.9A138 138 0 0 1 213.0 124.9M227.7 120.9A138 138 0 0 1 248.4 118.2M263.6 118.2A138 138 0 0 1 284.3 120.9M299.0 124.9A138 138 0 0 1 318.3 132.9M331.5 140.5A138 138 0 0 1 348.1 153.2M358.8 163.9A138 138 0 0 1 371.5 180.5M379.1 193.7A138 138 0 0 1 387.1 213.0M391.1 227.7A138 138 0 0 1 393.8 248.4" fill="none" stroke="#ff5a66" stroke-width="9" opacity="0.9"/>
+  <circle cx="256" cy="256" r="54" fill="url(#karen-core)"/>
+</svg>

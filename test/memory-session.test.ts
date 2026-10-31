@@ -39,7 +39,7 @@ describe('bellek entegrasyonu', () => {
     expect(system).toContain('SEN KARENSUN');
     expect(system).toContain('## Related memories');
     expect(system).toContain('puppeteer');
-    expect(system).toContain(`kaynak: ${source}`);
+    expect(system).toContain(`source: ${source}`);
   });
 
   it('recall increments the usage counter of the note', async () => {

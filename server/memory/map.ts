@@ -118,7 +118,7 @@ export function buildMap(
       kind: 'concept',
       label: concept,
       weight: Math.min(1, 0.25 + count / 12),
-      detail: `${count} notta geçiyor`,
+      detail: `${count} notes mention it`,
     });
   }
 
@@ -235,7 +235,7 @@ export function buildRegions(
     regions.push({
       id: 'region:project:other',
       kind: 'project',
-      label: `diğer projeler (${restProjects.length})`,
+      label: `other projects (${restProjects.length})`,
       nodeIds: restProjects.flatMap(([, ids]) => ids),
       weight: 0.3,
     });
@@ -248,7 +248,7 @@ export function buildRegions(
     regions.push({
       id: 'region:layer:episodic',
       kind: 'layer',
-      label: 'Anılar',
+      label: 'Memories',
       nodeIds: episodic,
       weight: Math.min(1, 0.3 + episodic.length / 30),
     });
@@ -257,7 +257,7 @@ export function buildRegions(
     regions.push({
       id: 'region:layer:semantic',
       kind: 'layer',
-      label: 'Bilgiler',
+      label: 'Facts',
       nodeIds: semantic,
       weight: Math.min(1, 0.3 + semantic.length / 30),
     });

@@ -95,7 +95,7 @@ describe('brain → session → result', () => {
     const result = await status.run({ sessionId: worker.id }, { cwd: 'C:\\proj', signal: new AbortController().signal });
     expect(result.ok).toBe(true);
     expect(result.output).toContain('rapor.pdf hazır');
-    expect(result.output).toContain('durum: idle');
+    expect(result.output).toContain('status: idle');
   });
 
   it('the brain cannot manage its own session', async () => {

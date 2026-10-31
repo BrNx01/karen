@@ -84,7 +84,7 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
     try {
       const memory = new MemoryStore(log);
       memory.rebuild();
-      console.log(`yeniden kuruldu: ${memory.list({ includeDormant: true, includeForgotten: true }).length} not`);
+      console.log(`rebuilt: ${memory.list({ includeDormant: true, includeForgotten: true }).length} notes`);
       return 0;
     } finally {
       log.close();

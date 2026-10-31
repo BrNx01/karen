@@ -64,7 +64,7 @@ export class ProposalStore {
   /** New proposal: checks first, then the record. A failing proposal becomes `rejected`. */
   async submit(input: ProposalInput, checkOpts: Omit<CheckOptions, 'repoRoot' | 'dataDir'> = {}): Promise<Proposal> {
     if (input.kind === 'code' && !this.deps.codeEditsEnabled) {
-      throw new Error('kod geliştirme yalnız kaynak kopyada kullanılabilir');
+      throw new Error('code growth is only available in the source copy');
     }
     const proposal: Proposal = {
       id: `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
@@ -107,11 +107,11 @@ export class ProposalStore {
   /** Approved: the files are written, a code proposal lands as a single commit. */
   async apply(id: string): Promise<{ ok: boolean; error?: string }> {
     const proposal = this.get(id);
-    if (!proposal) return { ok: false, error: 'teklif yok' };
-    if (proposal.status !== 'ready') return { ok: false, error: `durum uygun değil: ${proposal.status}` };
+    if (!proposal) return { ok: false, error: 'proposal not found' };
+    if (proposal.status !== 'ready') return { ok: false, error: `status not suitable: ${proposal.status}` };
     // A stored proposal may come from an older version: the allow-list surface is re-checked at apply time.
     if (proposal.kind === 'code' && !this.deps.codeEditsEnabled) {
-      return { ok: false, error: 'kod geliştirme yalnız kaynak kopyada kullanılabilir' };
+      return { ok: false, error: 'code growth is only available in the source copy' };
     }
     const targets: string[] = [];
     for (const file of proposal.files) {
@@ -119,14 +119,14 @@ export class ProposalStore {
         repoRoot: this.deps.repoRoot,
         dataDir: this.deps.dataDir,
       });
-      if (target === null) return { ok: false, error: `izin dışı yol: ${file.path}` };
+      if (target === null) return { ok: false, error: `path outside allow-list: ${file.path}` };
       targets.push(target);
     }
 
     try {
       if (proposal.kind === 'code') {
         const dirty = await git(['status', '--porcelain'], this.deps.repoRoot);
-        if (dirty.trim() !== '') return { ok: false, error: 'çalışma ağacı temiz değil; önce commit/geri al' };
+        if (dirty.trim() !== '') return { ok: false, error: 'working tree is not clean; commit/revert first' };
       }
 
       for (const [i, file] of proposal.files.entries()) {
@@ -162,8 +162,8 @@ export class ProposalStore {
   /** Revert: `git revert` for a code proposal, the `before` text is written back for the others. */
   async revert(id: string): Promise<{ ok: boolean; error?: string }> {
     const proposal = this.get(id);
-    if (!proposal) return { ok: false, error: 'teklif yok' };
-    if (proposal.status !== 'applied') return { ok: false, error: `geri alınamaz: ${proposal.status}` };
+    if (!proposal) return { ok: false, error: 'proposal not found' };
+    if (proposal.status !== 'applied') return { ok: false, error: `cannot revert: ${proposal.status}` };
 
     try {
       if (proposal.kind === 'code' && proposal.commit) {
@@ -177,7 +177,7 @@ export class ProposalStore {
           }),
         );
         const bad = proposal.files.find((_file, i) => targets[i] === null);
-        if (bad) return { ok: false, error: `izin dışı yol: ${bad.path}` };
+        if (bad) return { ok: false, error: `path outside allow-list: ${bad.path}` };
         for (const [i, file] of proposal.files.entries()) {
           writeFileSync(targets[i] as string, file.before, 'utf8');
         }
@@ -246,7 +246,7 @@ export class ProposalStore {
 function git(args: string[], cwd: string): Promise<string> {
   return new Promise((resolveGit, reject) => {
     execFile('git', args, { cwd, timeout: 60_000, windowsHide: true }, (err, stdout, stderr) => {
-      if (err) reject(new Error(`${args[0]} başarısız: ${String(stderr || err.message).slice(0, 200)}`));
+      if (err) reject(new Error(`${args[0]} failed: ${String(stderr || err.message).slice(0, 200)}`));
       else resolveGit(String(stdout));
     });
   });

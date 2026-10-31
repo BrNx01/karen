@@ -36,7 +36,7 @@ export class ApprovalBroker {
       requestId,
       tool: req.tool,
       args: req.args,
-      reason: 'onay gerekli',
+      reason: 'approval required',
       className: 'important',
     };
     const key = `${sessionId}:${requestId}`;

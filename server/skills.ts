@@ -130,7 +130,7 @@ export class SkillStore {
 
   install(sourceDir: string): InstalledSkill[] {
     const found = discoverSkills(sourceDir);
-    if (found.length === 0) throw new Error('yetenek bulunamadı');
+    if (found.length === 0) throw new Error('no skills found');
     const index = this.loadIndex();
     const installed: InstalledSkill[] = [];
 
@@ -212,14 +212,14 @@ export class SkillStore {
       .filter((s) => s.enabled)
       .slice(0, limit)
       .map((s) => {
-        const triggers = s.triggers.length > 0 ? ` (tetikleyici: ${s.triggers.join(', ')})` : '';
+        const triggers = s.triggers.length > 0 ? ` (triggers: ${s.triggers.join(', ')})` : '';
         const description = cleanText(s.description || s.name, 120);
         return `- ${s.id}: ${description}${triggers}`.slice(0, 200);
       });
   }
 
   private dirOf(id: string): string {
-    if (!isValidId(id)) throw new Error(`geçersiz yetenek kimliği: ${id}`);
+    if (!isValidId(id)) throw new Error(`invalid skill id: ${id}`);
     return join(this.rootDir, id);
   }
 

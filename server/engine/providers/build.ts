@@ -41,10 +41,10 @@ export function buildProvider(
   if (spec.id === 'azure-openai') {
     const deployment = perProvider?.deployment ?? settings.model;
     const apiVersion = perProvider?.apiVersion ?? '2024-10-21';
-    if (!baseUrl || !deployment) return fallback(spec, 'azure adresi/dağıtımı eksik');
+    if (!baseUrl || !deployment) return fallback(spec, 'azure address/deployment missing');
     baseUrl = `${baseUrl.replace(/\/$/, '')}/openai/deployments/${encodeURIComponent(deployment)}?api-version=${encodeURIComponent(apiVersion)}`;
   }
-  if (baseUrl === '') return fallback(spec, 'base URL eksik');
+  if (baseUrl === '') return fallback(spec, 'base URL missing');
 
   return {
     provider: new OpenAICompatibleProvider({

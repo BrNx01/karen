@@ -24,7 +24,7 @@ describe('world tools', () => {
     const result = await find('world_query').run({ entity: 'p' }, ctx);
     expect(result.ok).toBe(true);
     expect(result.output).toContain('500 TL');
-    expect(result.output).toContain(`kaynak: ${event.id}`);
+    expect(result.output).toContain(`source: ${event.id}`);
   });
 
   it('computes and returns a source', async () => {
@@ -49,7 +49,7 @@ describe('world tools', () => {
     const { find } = setup();
     const result = await find('world_compute').run({ op: 'sum', attribute: 'bütçe' }, ctx);
     expect(result.ok).toBe(false);
-    expect(result.output).toContain('kayıt yok');
+    expect(result.output).toContain('no records');
   });
 
   it('lists the operation history', async () => {

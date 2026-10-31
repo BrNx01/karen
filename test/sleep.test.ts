@@ -63,7 +63,7 @@ describe('sleep', () => {
     const second = await sleep(log, memory, { dataDir });
     await first;
     expect(second.ran).toBe(false);
-    expect(second.skipped).toContain('zaten çalışıyor');
+    expect(second.skipped).toContain('already running');
   });
 
   it('returns a decay report', async () => {

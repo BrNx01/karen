@@ -106,6 +106,6 @@ describe('memory tools', () => {
     memory.add({ kind: 'episodic', text: 'PDF raporu puppeteer ile üretildi', evidence: [7], base: 0.8 });
     const result = await find('memory_search').run({ query: 'pdf raporu' }, ctx);
     expect(result.ok).toBe(true);
-    expect(result.output).toContain('kaynak: #7');
+    expect(result.output).toContain('source: #7');
   });
 });

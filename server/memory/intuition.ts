@@ -13,10 +13,10 @@ const MAX_LINE_SOURCES = 4;
 const MAX_LINE_CHARS = 300;
 
 export type Intuition = {
-  id: string; // kavram kümesinden türetilir (deterministik)
+  id: string; // derived from the concept set, so it is deterministic
   concepts: string[];
-  caution: number; // 0..1 — travma komşuluğu
-  confidence: number; // 0..1 — kaynak not sayısı
+  caution: number; // 0..1 — proximity to trauma
+  confidence: number; // 0..1 — number of source notes
   sourceNotes: string[];
   createdAt: number;
 };

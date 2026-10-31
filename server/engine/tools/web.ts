@@ -62,7 +62,7 @@ export function webSearchTool(opts: { fetchImpl?: typeof fetch } = {}): Tool {
     },
     async run(args, ctx) {
       const query = String(args['query'] ?? '').trim();
-      if (query === '') return { ok: false, output: 'sorgu boş' };
+      if (query === '') return { ok: false, output: 'query is empty' };
       const limit = Math.min(10, Math.max(1, Math.floor(Number(args['limit'])) || 5));
       const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
       const timeout = AbortSignal.timeout(TIMEOUT_MS);
@@ -73,7 +73,7 @@ export function webSearchTool(opts: { fetchImpl?: typeof fetch } = {}): Tool {
         if (!res.ok) {
           // The error body is not read: release the socket.
           await res.body?.cancel().catch(() => undefined);
-          return { ok: false, output: `arama başarısız: HTTP ${res.status}` };
+          return { ok: false, output: `search failed: HTTP ${res.status}` };
         }
         // The whole body is not read into memory: reading stops once the limit is full.
         if (res.body) {
@@ -93,10 +93,10 @@ export function webSearchTool(opts: { fetchImpl?: typeof fetch } = {}): Tool {
         }
       } catch (err) {
         const message = signal.aborted ? 'aborted or timed out' : (err as Error).message;
-        return { ok: false, output: `arama başarısız: ${message}` };
+        return { ok: false, output: `search failed: ${message}` };
       }
       const results = parseResults(text, limit);
-      if (results.length === 0) return { ok: false, output: 'sonuç bulunamadı' };
+      if (results.length === 0) return { ok: false, output: 'no results found' };
       const lines = results.map((r) => `- ${r.title} — ${r.url}${r.snippet ? ` (${r.snippet})` : ''}`);
       return { ok: true, output: truncate(lines.join('\n')) };
     },
@@ -127,7 +127,7 @@ export function fetchUrlTool(opts: { readOnly?: boolean; fetchImpl?: typeof fetc
         const method = String(args['method'] ?? 'GET').toUpperCase();
         const body = typeof args['body'] === 'string' ? args['body'] : '';
         if ((method !== 'GET' && method !== 'HEAD') || body.trim() !== '') {
-          return { ok: false, output: 'otonom modda yalnız okuma isteği' };
+          return { ok: false, output: 'autonomous mode allows read-only requests only' };
         }
       }
       let url: URL;

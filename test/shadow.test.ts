@@ -34,12 +34,12 @@ describe('shadowReport', () => {
     });
     expect(r.line).not.toContain('\n');
     expect(r.line.length).toBeLessThanOrEqual(300);
-    expect(r.line).toContain('eksik');
+    expect(r.line).toContain('missing');
   });
 
   it('a clean line when nothing is missing', () => {
     const r = shadowReport({ repoPath: 'C:\\p', known: ['node'], readFile: files({ 'package.json': '{}' }) });
-    expect(r.line).toContain('hazır');
+    expect(r.line).toContain('ready');
   });
 
   it('a corrupt manifest does not crash', () => {

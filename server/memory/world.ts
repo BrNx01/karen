@@ -431,14 +431,14 @@ export class WorldModel {
 
     // Historical rows are not summed: we would produce a total that was never true (decision 12.8).
     if (opts.includeHistory && (op === 'sum' || op === 'avg')) {
-      return { ...base, reason: 'geçmiş satırlar toplanamaz' };
+      return { ...base, reason: 'historical rows cannot be summed' };
     }
 
     const numbers = rows.filter((f) => f.valueNum !== null);
     if (op === 'sum' || op === 'avg') {
       const groups = new Set(numbers.map((f) => `${f.kind}:${f.unit ?? ''}`));
       if (groups.size > 1) {
-        return { ...base, reason: 'belirsiz: farklı tür/birim var' };
+        return { ...base, reason: 'ambiguous: mixed kinds/units' };
       }
       const values = numbers.map((f) => f.valueNum as number);
       if (values.length === 0) return base;
@@ -461,7 +461,7 @@ export class WorldModel {
       if (futureTimes[0]) {
         return { ...base, value: futureTimes[0].valueNum, at: futureTimes[0].validFrom, sourceEvents: [futureTimes[0].sourceEvent] };
       }
-      return { ...base, reason: 'gelecekte kayıt yok' };
+      return { ...base, reason: 'no records in the future' };
     }
 
     const pool = dates.length > 0 ? dates : times;
@@ -597,7 +597,7 @@ export class WorldModel {
     if (facts.length === 0 && actions.length === 0) return '';
     const lines: string[] = ['## World model'];
     for (const fact of facts) {
-      lines.push(`- ${fact.entity}: ${fact.attribute} = ${fact.valueText} [kaynak: ${fact.sourceEvent}]`);
+      lines.push(`- ${fact.entity}: ${fact.attribute} = ${fact.valueText} [source: ${fact.sourceEvent}]`);
     }
     for (const action of actions.slice(0, 4)) {
       lines.push(`- action: ${action.tool} → ${action.status} (${action.summary.slice(0, 80)})`);
@@ -639,7 +639,7 @@ export class WorldModel {
           tool,
           target: event.sessionId,
           status: ok ? 'ok' : 'failed',
-          summary: summary || (ok ? 'tamam' : 'başarısız'),
+          summary: summary || (ok ? 'ok' : 'failed'),
           at: event.ts,
           durationMs: null,
           sourceEvent: event.id,
@@ -649,7 +649,7 @@ export class WorldModel {
           tool,
           target: event.sessionId,
           status: ok ? 'ok' : 'failed',
-          summary: summary || (ok ? 'tamam' : 'başarısız'),
+          summary: summary || (ok ? 'ok' : 'failed'),
           at: event.ts,
           durationMs: null,
           sourceEvent: event.id,

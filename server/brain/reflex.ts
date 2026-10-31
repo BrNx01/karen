@@ -28,12 +28,12 @@ export type ReflexVerdict =
 export function assess(input: ReflexInput): ReflexVerdict {
   const ratio = clampRatio(input.rssMb, input.totalMb);
   if (ratio >= RAM_KILL_RATIO) {
-    return { action: 'kill-oldest', reason: `RAM %${Math.round(ratio * 100)} (eşik %90)` };
+    return { action: 'kill-oldest', reason: `RAM ${Math.round(ratio * 100)}% (threshold 90%)` };
   }
   if (REFLEX_TOOLS.has(input.tool) && input.repeats >= REPEAT_LIMIT) {
     return {
       action: 'abort-session',
-      reason: `${input.tool} aynı argümanla ${input.repeats} kez üst üste çağrıldı`,
+      reason: `${input.tool} called ${input.repeats} times in a row with the same arguments`,
     };
   }
   return { action: 'none' };

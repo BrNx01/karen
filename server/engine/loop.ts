@@ -150,8 +150,8 @@ export async function runAgent(opts: AgentOptions, messages: ChatMessage[]): Pro
             role: 'tool',
             content:
               offset === 0
-                ? 'refleks: aynı çağrı üst üste 3 kez geldi, oturum kesildi'
-                : 'reflex: çağrı çalıştırılmadı',
+                ? 'reflex: the same call arrived 3 times in a row, session aborted'
+                : 'reflex: call not executed',
             toolCallId: rest.id,
           });
         }
@@ -194,8 +194,8 @@ export async function runAgent(opts: AgentOptions, messages: ChatMessage[]): Pro
         if (isAbort(err, opts.signal)) {
           // The call in flight is logged separately; the rest are closed by `answerRest`.
           opts.log.append('tool_result', 'system', opts.sessionId, { tool: call.name, ok: false }, 'aborted/reflex');
-          history.push({ role: 'tool', content: 'iptal: çağrı çalıştırılmadı', toolCallId: call.id });
-          answerRest(i + 1, 'iptal: çağrı çalıştırılmadı');
+          history.push({ role: 'tool', content: 'cancelled: the call was not executed', toolCallId: call.id });
+          answerRest(i + 1, 'cancelled: the call was not executed');
           return { messages: history, stopReason: 'aborted' };
         }
         const message = `tool failed: ${(err as Error).message}`;

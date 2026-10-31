@@ -83,9 +83,9 @@ export function knownRequirements(memory: MemoryStore, repoPath: string): string
 }
 
 function summaryLine(known: string[], missing: string[]): string {
-  if (known.length === 0) return 'Henüz bilinen gereksinim yok; manifestler salt okunur incelendi.';
-  if (missing.length === 0) return normalizeInboxText(`${known.length} gereksinim hazır: ${known.join(', ')}`);
-  return normalizeInboxText(`${known.length} gereksinim: ${known.map((tag) => `${tag} ${missing.includes(tag) ? 'eksik' : 'hazır'}`).join(', ')}`);
+  if (known.length === 0) return 'No known requirements yet; manifests inspected read-only.';
+  if (missing.length === 0) return normalizeInboxText(`${known.length} requirements ready: ${known.join(', ')}`);
+  return normalizeInboxText(`${known.length} requirements: ${known.map((tag) => `${tag} ${missing.includes(tag) ? 'missing' : 'ready'}`).join(', ')}`);
 }
 
 /** Default reader: missing / no permission / path is a directory — all `null`, never throws. */

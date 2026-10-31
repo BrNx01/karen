@@ -159,7 +159,7 @@ describe('fetch_url read restriction', () => {
       ctx,
     );
     expect(out.ok).toBe(false);
-    expect(out.output).toContain('yalnız okuma');
+    expect(out.output).toContain('read-only');
     expect(calls).toBe(0);
   });
 

@@ -41,7 +41,7 @@ export function growthTools(store: ProposalStore, opts: { codeEditsEnabled: bool
       },
       async run(args) {
         const kind = String(args['kind'] ?? '');
-        if (!KINDS.includes(kind as ProposalKind)) return { ok: false, output: `geçersiz tür: ${kind}` };
+        if (!KINDS.includes(kind as ProposalKind)) return { ok: false, output: `invalid kind: ${kind}` };
         const filesRaw = args['files'];
         if (!Array.isArray(filesRaw) || filesRaw.length === 0) return { ok: false, output: 'files required' };
 
@@ -56,7 +56,7 @@ export function growthTools(store: ProposalStore, opts: { codeEditsEnabled: bool
           const before = typeof item['before'] === 'string' ? item['before'] : store.readDataFile(path);
           files.push({ path, before, after });
         }
-        if (files.length === 0) return { ok: false, output: 'geçerli dosya yok' };
+        if (files.length === 0) return { ok: false, output: 'no valid files' };
 
         try {
           const proposal = await store.submit(
@@ -72,12 +72,12 @@ export function growthTools(store: ProposalStore, opts: { codeEditsEnabled: bool
           if (proposal.status === 'rejected') {
             return {
               ok: false,
-              output: `teklif reddedildi (${failed.map((c) => `${c.name}: ${c.detail}`).join('; ')})`,
+              output: `proposal rejected (${failed.map((c) => `${c.name}: ${c.detail}`).join('; ')})`,
             };
           }
           return {
             ok: true,
-            output: `teklif hazır: ${proposal.id} · ${proposal.risk} risk · ${proposal.files.length} dosya. Kullanıcı onayı bekliyor.`,
+            output: `proposal ready: ${proposal.id} · ${proposal.risk} risk · ${proposal.files.length} files. Awaiting user approval.`,
           };
         } catch (err) {
           return { ok: false, output: (err as Error).message };
@@ -96,13 +96,13 @@ export function growthTools(store: ProposalStore, opts: { codeEditsEnabled: bool
         const applied = store.list().filter((p) => p.status === 'applied').slice(-5);
         const lines: string[] = [];
         if (pending.length > 0) {
-          lines.push('Bekleyen:');
+          lines.push('Pending:');
           for (const proposal of pending) lines.push(`${proposal.id} · ${proposal.kind} · ${proposal.title} (${proposal.risk})`);
         } else {
-          lines.push('Bekleyen teklif yok.');
+          lines.push('No pending proposals.');
         }
         if (applied.length > 0) {
-          lines.push('Uygulanan:');
+          lines.push('Applied:');
           for (const proposal of applied) lines.push(`${proposal.id} · ${proposal.title}`);
         }
         return { ok: true, output: lines.join('\n') };
@@ -117,7 +117,7 @@ export function growthTools(store: ProposalStore, opts: { codeEditsEnabled: bool
       },
       async run() {
         const files = store.dataFiles();
-        if (files.length === 0) return { ok: true, output: 'kimlik dosyası yok' };
+        if (files.length === 0) return { ok: true, output: 'no identity files' };
         return {
           ok: true,
           output: files.map((path) => `--- ${path}\n${store.readDataFile(path).slice(0, 3000)}`).join('\n\n'),

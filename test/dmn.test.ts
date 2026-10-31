@@ -89,7 +89,7 @@ describe('Dmn', () => {
 
   it('does nothing while the user is active', () => {
     const { dmn } = setup();
-    expect(dmn.tick(NOON).reason).toBe('kullanıcı etkin');
+    expect(dmn.tick(NOON).reason).toBe('user active');
   });
 
   it('opens an autonomous turn when idle with a drive and writes to the inbox', async () => {
@@ -109,13 +109,13 @@ describe('Dmn', () => {
     // make sure the turn really ends: otherwise the second tick hits "busy" and cooldown is never tested.
     await vi.waitFor(() => expect(log.read().some((e) => e.kind === 'dmn_run')).toBe(true));
     adv(5 * 60_000);
-    expect(dmn.tick(NOON + 36 * 60_000).reason).toBe('bekleme');
+    expect(dmn.tick(NOON + 36 * 60_000).reason).toBe('cooldown');
   });
 
   it('does not exceed the daily limit', () => {
     const { dmn, adv } = setup({ dailyRuns: 0 });
     adv(31 * 60_000);
-    expect(dmn.tick(NOON + 31 * 60_000).reason).toBe('günlük sınır');
+    expect(dmn.tick(NOON + 31 * 60_000).reason).toBe('daily limit');
   });
 
   it('stop ends the in-flight turn without writing', async () => {
@@ -223,7 +223,7 @@ describe('Dmn', () => {
     await vi.waitFor(() => expect(log.read().some((e) => e.kind === 'dmn_run')).toBe(true));
     // a tick one minute later opens no new session: a provider outage must not become a loop.
     adv(60_000);
-    expect(dmn.tick(NOON + 32 * 60_000).reason).toBe('bekleme');
+    expect(dmn.tick(NOON + 32 * 60_000).reason).toBe('cooldown');
   });
 
   it('a hung provider closes on timeout and leaves a dmn_run error', async () => {
@@ -233,7 +233,7 @@ describe('Dmn', () => {
     await vi.waitFor(() => expect(log.read().some((e) => e.kind === 'dmn_run')).toBe(true), { timeout: 2000 });
     const run = log.read().find((e) => e.kind === 'dmn_run')!;
     expect(run.payload['ok']).toBe(false);
-    expect(String(run.payload['error'])).toContain('zaman aşımı');
+    expect(String(run.payload['error'])).toContain('timeout');
     expect(log.read().some((e) => e.kind === 'error')).toBe(false);
     expect(inbox.list()).toHaveLength(0);
     // the lock is released: the session is in error state and not busy.
@@ -247,7 +247,7 @@ describe('Dmn', () => {
     await vi.waitFor(() => expect(inbox.list()).toHaveLength(1));
     const text = inbox.list()[0]!.text;
     expect(text).not.toContain('https://example.com/rv');
-    expect(text).toContain('[kaynak doğrulanamadı]');
+    expect(text).toContain('[source unverified]');
   });
 
   it('a scheduler error does not take the process down and keeps the last error', () => {
@@ -269,7 +269,7 @@ describe('Dmn', () => {
     adv(31 * 60_000);
     dmn.tick(NOON + 31 * 60_000);
     await vi.waitFor(() => expect(inbox.list()).toHaveLength(1));
-    expect(inbox.list()[0]!.text).toBe('curiosity: çıktı yok');
+    expect(inbox.list()[0]!.text).toBe('curiosity: no output');
   });
 
   it('restart does not reset the daily count', async () => {
@@ -290,7 +290,7 @@ describe('Dmn', () => {
     });
     expect(again.stats().runsToday).toBe(1);
     adv(20 * 60_000);
-    expect(again.tick(NOON + 51 * 60_000).reason).toBe('günlük sınır');
+    expect(again.tick(NOON + 51 * 60_000).reason).toBe('daily limit');
   });
 
   it('distills within the turn: the note is written before the morning report', async () => {

@@ -591,9 +591,9 @@ export class MemoryStore {
     const notes = this.recall(query, opts);
     if (notes.length === 0) return { text: '', notes };
     const lines = notes.map((n) => {
-      const sources = n.evidence.slice(0, 6).join(', ') || 'yok';
+      const sources = n.evidence.slice(0, 6).join(', ') || 'none';
       const suffix = n.evidence.length > 6 ? '…' : '';
-      return `- ${n.text.slice(0, 400)} [kaynak: ${sources}${suffix}]${n.kind === 'semantic' ? '' : ' (anı)'}`;
+      return `- ${n.text.slice(0, 400)} [source: ${sources}${suffix}]${n.kind === 'semantic' ? '' : ' (episode)'}`;
     });
     // Keep the context from bloating: the memory section does not exceed 2000 characters.
     return { text: ['## Related memories', ...lines].join('\n').slice(0, 2000), notes };

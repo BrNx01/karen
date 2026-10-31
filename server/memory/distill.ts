@@ -23,7 +23,7 @@ const SECRET_PATTERNS: { re: RegExp; label: string }[] = [
   { re: /\bghp_[A-Za-z0-9]{20,}/, label: 'github token' },
   { re: /(password|parola|şifre|sifre|secret|token)\s*[:=]\s*\S{4,}/i, label: 'credential' },
   { re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/, label: 'private key' },
-  { re: /\b\d{11}\b/, label: 'kimlik numarası' },
+  { re: /\b\d{11}\b/, label: 'national id' },
 ];
 
 /** 1. Segmenter: splits the conversation into user turns. */
@@ -120,17 +120,17 @@ export function parseCandidates(raw: string): CandidateNote[] {
 /** 4. Privacy filter: a candidate carrying a secret is never written. */
 export function privacyCheck(text: string): RejectedNote | null {
   for (const pattern of SECRET_PATTERNS) {
-    if (pattern.re.test(text)) return { text, reason: `gizlilik: ${pattern.label}` };
+    if (pattern.re.test(text)) return { text, reason: `privacy: ${pattern.label}` };
   }
   return null;
 }
 
 /** 5. Evidence auditor: the cited event text must truly support the note. Deterministic gate. */
 export function evidenceCheck(candidate: CandidateNote, block: DistillBlock): RejectedNote | null {
-  if (candidate.evidence.length === 0) return { text: candidate.text, reason: 'kanıt yok' };
+  if (candidate.evidence.length === 0) return { text: candidate.text, reason: 'no evidence' };
   const blockIds = new Set(block.events.map((e) => e.id));
   const missing = candidate.evidence.filter((id) => !blockIds.has(id));
-  if (missing.length > 0) return { text: candidate.text, reason: `bilinmeyen olay: ${missing.join(',')}` };
+  if (missing.length > 0) return { text: candidate.text, reason: `unknown event: ${missing.join(',')}` };
 
   // Only the text of the CITED events counts as source; not the whole block.
   const cited = block.events.filter((e) => candidate.evidence.includes(e.id));
@@ -140,32 +140,32 @@ export function evidenceCheck(candidate: CandidateNote, block: DistillBlock): Re
   const words = fold(candidate.text)
     .split(' ')
     .filter((w) => w.length > 3);
-  if (words.length === 0) return { text: candidate.text, reason: 'anlamsız metin' };
+  if (words.length === 0) return { text: candidate.text, reason: 'meaningless text' };
   const supported = words.filter((w) => source.includes(w));
   // Threshold 0.5: wording may differ, but a changed topic/fabrication is caught.
   if (supported.length / words.length < 0.5) {
-    return { text: candidate.text, reason: 'alıntı metni desteklemiyor' };
+    return { text: candidate.text, reason: 'citation does not support the text' };
   }
 
   // URLs cannot be fabricated: every address in the note must appear verbatim in the cited event text.
   for (const url of candidate.text.match(/https?:\/\/\S+/g) ?? []) {
     const trimmed = url.replace(/[).,;:!?]+$/, '');
     if (!urlCited(url, rawSource) && !(trimmed !== url && urlCited(trimmed, rawSource))) {
-      return { text: candidate.text, reason: 'kaynak url yok' };
+      return { text: candidate.text, reason: 'source url missing' };
     }
   }
 
   // Numbers cannot be fabricated: every number in the note must be in the source.
   for (const digit of candidate.text.match(/\d+/g) ?? []) {
-    if (!rawSource.includes(digit)) return { text: candidate.text, reason: `kaynakta olmayan sayı: ${digit}` };
+    if (!rawSource.includes(digit)) return { text: candidate.text, reason: `number not in source: ${digit}` };
   }
 
   // Negation cannot be flipped: if the note is negated, the source must be too.
   if (NEGATION.test(candidate.text) && !NEGATION.test(rawSource)) {
-    return { text: candidate.text, reason: 'olumsuzluk kaynakta yok' };
+    return { text: candidate.text, reason: 'negation not present in source' };
   }
 
-  if (candidate.text.length > 600) return { text: candidate.text, reason: 'çok uzun not' };
+  if (candidate.text.length > 600) return { text: candidate.text, reason: 'note too long' };
   return null;
 }
 
@@ -187,7 +187,7 @@ export function urlCited(url: string, rawSource: string): boolean {
 export function duplicateCheck(candidate: CandidateNote, existing: string[]): RejectedNote | null {
   const normalized = fold(candidate.text);
   if (existing.some((text) => fold(text) === normalized)) {
-    return { text: candidate.text, reason: 'tekrar' };
+    return { text: candidate.text, reason: 'duplicate' };
   }
   return null;
 }
@@ -196,7 +196,7 @@ const MAX_CANDIDATES_PER_BLOCK = 8;
 const MAX_ADDITIONS_PER_RUN = 200;
 
 /** Reason a candidate is rejected when the distillation model call fails (callers look for this). */
-export const DISTILL_MODEL_FAILED = 'model çağrısı başarısız';
+export const DISTILL_MODEL_FAILED = 'model call failed';
 
 export type DistillOutcome = {
   added: Note[];
@@ -241,7 +241,7 @@ export async function distill(
       }
       for (const candidate of parseCandidates(raw).slice(0, MAX_CANDIDATES_PER_BLOCK)) {
         if (added.length >= MAX_ADDITIONS_PER_RUN) {
-          rejected.push({ text: candidate.text, reason: 'tur başına not sınırı' });
+          rejected.push({ text: candidate.text, reason: 'note limit per run' });
           continue;
         }
         const privacy = privacyCheck(candidate.text);
@@ -284,7 +284,7 @@ export async function distill(
     added,
     rejected,
     llmCalls,
-    ...(opts.distiller ? {} : { skipped: 'model yok: yalnız episodik özet ve solma' }),
+    ...(opts.distiller ? {} : { skipped: 'no model: episodic summary and decay only' }),
   };
 }
 
@@ -325,9 +325,9 @@ export function episodicSummary(events: StoredEvent[], project: string | null): 
   const uniqueTools = [...new Set(tools)].filter((t) => t !== '');
   const errors = events.filter((e) => e.kind === 'error').length;
 
-  const parts = [`Oturumda: ${firstText}`];
-  if (uniqueTools.length > 0) parts.push(`kullanılan araçlar: ${uniqueTools.slice(0, 6).join(', ')}`);
-  if (errors > 0) parts.push(`${errors} hata`);
+  const parts = [`In session: ${firstText}`];
+  if (uniqueTools.length > 0) parts.push(`tools used: ${uniqueTools.slice(0, 6).join(', ')}`);
+  if (errors > 0) parts.push(`${errors} errors`);
   return {
     kind: 'episodic',
     text: parts.join(' — ').slice(0, 500),

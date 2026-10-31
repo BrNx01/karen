@@ -62,7 +62,7 @@ describe('LocalWhisper', () => {
     const whisper = new LocalWhisper({ dataDir, startupTimeoutMs: 1000 });
     const result = await whisper.transcribe(new Uint8Array(48), 'tr');
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason).toContain('whisper kurulu değil');
+    if (!result.ok) expect(result.reason).toContain('whisper is not installed');
     whisper.stop();
   });
 });

@@ -53,6 +53,6 @@ describe('computer tools', () => {
     const tools = computerTools({ dataDir: dataDir(), cwd: '.' });
     const media = tools.find((t) => t.def.name === 'media_control')!;
     const result = await media.run({ action: 'yok' }, ctx('.'));
-    expect(result.output).toContain('bilinmeyen işlem');
+    expect(result.output).toContain('unknown action');
   });
 });

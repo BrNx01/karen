@@ -119,7 +119,7 @@ export async function setupVoice(opts: {
     rmSync(zip, { force: true });
     const found = whisperBinaryCandidates(opts.dataDir).find((p) => existsSync(p));
     if (!found) return { ok: false, steps: [...steps, 'the binary was not in the archive'] };
-    steps.push(`binary kuruldu: ${found}`);
+    steps.push(`binary installed: ${found}`);
   }
 
   // 2) Model
@@ -129,7 +129,7 @@ export async function setupVoice(opts: {
     const target = join(modelDir, MODEL_NAME);
     opts.onProgress?.('downloading the model (~142 MB)…');
     await download(opts.modelUrl ?? MODEL_URL, target, (mb) => opts.onProgress?.(`model: ${mb} MB`));
-    steps.push(`model kuruldu: ${target}`);
+    steps.push(`model installed: ${target}`);
   }
 
   const binary = whisperBinaryCandidates(opts.dataDir).find((p) => existsSync(p)) ?? null;

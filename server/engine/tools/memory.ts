@@ -28,11 +28,11 @@ export function memoryTools(memory: MemoryStore): Tool[] {
         const grade = String(args['grade'] ?? 'good');
         const allowed = ['good', 'easy', 'hard', 'again'] as const;
         const chosen = (allowed as readonly string[]).includes(grade) ? (grade as (typeof allowed)[number]) : 'good';
-        if (!memory.review(id, chosen)) return { ok: false, output: `hatıra yok: ${id}` };
+        if (!memory.review(id, chosen)) return { ok: false, output: `no memory: ${id}` };
         const note = memory.get(id);
         return {
           ok: true,
-          output: `inceleme kaydedildi (${chosen}) · kararlılık ${note?.stability.toFixed(1)} gün · depolama ${note?.storage}`,
+          output: `review saved (${chosen}) · stability ${note?.stability.toFixed(1)} days · storage ${note?.storage}`,
         };
       },
     },
@@ -55,13 +55,13 @@ export function memoryTools(memory: MemoryStore): Tool[] {
         if (query === '') return { ok: false, output: 'query required' };
         const limit = typeof args['limit'] === 'number' ? Math.min(20, args['limit']) : 5;
         const hits = memory.recall(query, { limit });
-        if (hits.length === 0) return { ok: true, output: 'eşleşen hatıra yok' };
+        if (hits.length === 0) return { ok: true, output: 'no matching memories' };
         return {
           ok: true,
           output: hits
             .map(
               (hit) =>
-                `- [${hit.id}] (${hit.kind}, güç ${hit.strength.toFixed(2)}) ${hit.text.slice(0, 200)} [kaynak: ${hit.evidence
+                `- [${hit.id}] (${hit.kind}, strength ${hit.strength.toFixed(2)}) ${hit.text.slice(0, 200)} [source: ${hit.evidence
                   .slice(0, 4)
                   .map((id) => `#${id}`)
                   .join(' ')}]`,

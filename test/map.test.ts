@@ -33,7 +33,7 @@ describe('buildMap', () => {
     expect(projectRegion?.count).toBe(1);
     expect(projectRegion?.nodeIds).toHaveLength(1);
 
-    const layerRegion = map.regions.find((r) => r.kind === 'layer' && r.label === 'Anılar');
+    const layerRegion = map.regions.find((r) => r.kind === 'layer' && r.label === 'Memories');
     expect(layerRegion?.count).toBe(1);
   });
 

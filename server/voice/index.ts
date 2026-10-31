@@ -163,8 +163,8 @@ export class LocalWhisper {
 
     this.starting = (async () => {
       const { binary, model } = this.info();
-      if (!binary) throw new Error('whisper kurulu değil');
-      if (!model) throw new Error('whisper modeli yok');
+      if (!binary) throw new Error('whisper is not installed');
+      if (!model) throw new Error('whisper model missing');
 
       const port = await freePort();
       const child = spawn(binary, ['-m', model, '--port', String(port), '--host', '127.0.0.1'], {
@@ -177,7 +177,7 @@ export class LocalWhisper {
         child.once('error', (err) => {
           this.child = null;
           this.port = 0;
-          reject(new Error(`whisper başlatılamadı: ${err.message}`));
+          reject(new Error(`whisper failed to start: ${err.message}`));
         });
         child.once('spawn', () => resolve());
       });
@@ -194,7 +194,7 @@ export class LocalWhisper {
 
       const deadline = Date.now() + (this.opts.startupTimeoutMs ?? 90_000);
       for (;;) {
-        if (child.exitCode !== null) throw new Error('whisper sunucusu başlamadı');
+        if (child.exitCode !== null) throw new Error('whisper server did not start');
         try {
           const res = await fetch(`http://127.0.0.1:${port}/`, { method: 'GET' });
           if (res.status < 500) break;
@@ -203,7 +203,7 @@ export class LocalWhisper {
         }
         if (Date.now() > deadline) {
           child.kill();
-          throw new Error('whisper sunucusu zaman aşımına uğradı');
+          throw new Error('whisper server timed out');
         }
         await new Promise((r) => setTimeout(r, 400));
       }
@@ -241,7 +241,7 @@ export class LocalWhisper {
       const payload = (await res.json()) as { text?: string };
       return { ok: true, text: cleanTranscript(payload.text ?? '') };
     } catch (err) {
-      return { ok: false, reason: `çözümleme başarısız: ${(err as Error).message}` };
+      return { ok: false, reason: `transcription failed: ${(err as Error).message}` };
     }
   }
 
@@ -269,10 +269,10 @@ export function ensureVoiceDirs(dataDir?: string): void {
 
 export function voiceSetupHint(dataDir?: string): string {
   return [
-    'Yerel ses için:',
+    'For local voice:',
     '  npm run karen -- voice-setup --yes',
     `  binary: ${whisperBinaryCandidates(dataDir)[0]}`,
     `  model:  ${whisperModelCandidates(dataDir)[0]}`,
-    'Türkçe seslendirme için Windows Ayarlar → Zaman ve Dil → Konuşma → Ses ekle (Türkçe).',
+    'For Turkish speech, add a voice in Windows Settings → Time and Language → Speech (Turkish).',
   ].join('\n');
 }

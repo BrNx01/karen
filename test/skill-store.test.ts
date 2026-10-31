@@ -108,6 +108,6 @@ describe('SkillStore', () => {
 
   it('errors on a folder with no skill', () => {
     const s = store();
-    expect(() => s.install(mkdtempSync(join(tmpdir(), 'karen-empty-')))).toThrow('yetenek bulunamadı');
+    expect(() => s.install(mkdtempSync(join(tmpdir(), 'karen-empty-')))).toThrow('no skills found');
   });
 });

@@ -48,11 +48,11 @@ export function sessionTools(manager: SessionManager, brainId: string, opts: Spa
         const rawCwd = typeof args['cwd'] === 'string' && args['cwd'].trim() !== '' ? args['cwd'] : undefined;
         // The folder the model chose sets the approval boundary, so it is validated.
         if (rawCwd !== undefined && !cwdAllowed(rawCwd)) {
-          return { ok: false, output: `cwd izinli değil: ${rawCwd} (yalnız mevcut proje veya kayıtlı repo)` };
+          return { ok: false, output: `cwd not allowed: ${rawCwd} (only the current project or a registered repo)` };
         }
         const title = typeof args['title'] === 'string' ? args['title'] : undefined;
         if (!manager.canStartBackground()) {
-          return { ok: false, output: 'arka plan sınırı dolu; önce çalışan bir oturumu bitir ya da iptal et' };
+          return { ok: false, output: 'background limit reached; finish or cancel a running session first' };
         }
         const session = manager.create({
           role: 'worker',
@@ -62,7 +62,7 @@ export function sessionTools(manager: SessionManager, brainId: string, opts: Spa
         manager.startBackground(session.id, task, brainId);
         return {
           ok: true,
-          output: `session ${session.id} başladı (${session.title}, ${session.cwd}). Bitince bildirim gelecek.`,
+          output: `session ${session.id} started (${session.title}, ${session.cwd}). You will be notified when it finishes.`,
         };
       },
     },
@@ -80,20 +80,20 @@ export function sessionTools(manager: SessionManager, brainId: string, opts: Spa
         const id = typeof args['sessionId'] === 'string' ? args['sessionId'] : '';
         if (id === '') {
           const rows = listOthers().map((s) => `${s.id} [${s.status}] ${s.title} — ${s.cwd}`);
-          return { ok: true, output: rows.length > 0 ? rows.join('\n') : 'başka oturum yok' };
+          return { ok: true, output: rows.length > 0 ? rows.join('\n') : 'no other sessions' };
         }
         const info = manager.get(id);
-        if (!info || info.role === 'brain') return { ok: false, output: `oturum yok: ${id}` };
+        if (!info || info.role === 'brain') return { ok: false, output: `no session: ${id}` };
         const history = manager.history(id);
         const last = [...history].reverse().find((m) => m.role === 'assistant');
         return {
           ok: true,
           output: [
             `id: ${info.id}`,
-            `başlık: ${info.title}`,
-            `durum: ${info.status}`,
-            `klasör: ${info.cwd}`,
-            `son: ${(last?.content ?? info.lastMessage ?? '—').slice(0, 800)}`,
+            `title: ${info.title}`,
+            `status: ${info.status}`,
+            `folder: ${info.cwd}`,
+            `last: ${(last?.content ?? info.lastMessage ?? '—').slice(0, 800)}`,
           ].join('\n'),
         };
       },
@@ -117,10 +117,10 @@ export function sessionTools(manager: SessionManager, brainId: string, opts: Spa
         const text = typeof args['text'] === 'string' ? args['text'] : '';
         if (id === '' || text.trim() === '') return { ok: false, output: 'sessionId and text required' };
         const info = manager.get(id);
-        if (!info || info.role === 'brain') return { ok: false, output: `oturum yok: ${id}` };
+        if (!info || info.role === 'brain') return { ok: false, output: `no session: ${id}` };
         // Text sent by the brain is not a user message: the preference counter does not count it.
         const result = await manager.send(id, text, brainId, { origin: 'agent' });
-        return { ok: result.ok, output: result.ok ? 'gönderildi' : result.error ?? 'hata' };
+        return { ok: result.ok, output: result.ok ? 'sent' : result.error ?? 'error' };
       },
     },
     {
@@ -137,9 +137,9 @@ export function sessionTools(manager: SessionManager, brainId: string, opts: Spa
       async run(args) {
         const id = typeof args['sessionId'] === 'string' ? args['sessionId'] : '';
         const target = id === '' ? undefined : manager.get(id);
-        if (!target || target.role === 'brain') return { ok: false, output: `oturum yok: ${id}` };
+        if (!target || target.role === 'brain') return { ok: false, output: `no session: ${id}` };
         manager.abort(id);
-        return { ok: true, output: 'iptal istendi' };
+        return { ok: true, output: 'cancellation requested' };
       },
     },
   ];

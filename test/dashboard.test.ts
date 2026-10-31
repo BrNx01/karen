@@ -56,7 +56,7 @@ describe('buildDashboard', () => {
     const data = buildDashboard({ sessions: [session({})], memory, approvals, logEvents: log.read(), voice });
     expect(data.pendingApprovals).toBe(1);
     expect(data.status).toBe('attention');
-    expect(data.events.some((e) => e.text.includes('onay bekliyor'))).toBe(true);
+    expect(data.events.some((e) => e.text.includes('approvals pending'))).toBe(true);
     approvals.cancelSession('s1');
   });
 

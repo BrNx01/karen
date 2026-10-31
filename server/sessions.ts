@@ -82,7 +82,7 @@ export type SessionDeps = {
 
 const DEFAULT_SYSTEM = "You are KAREN. Work briefly and clearly. Use tools for their intended purpose.";
 const AUTONOMOUS_TIMEOUT_MS = 10 * 60_000;
-export const AUTONOMOUS_TIMEOUT = 'otonom tur zaman aşımı';
+export const AUTONOMOUS_TIMEOUT = 'autonomous turn timeout';
 
 function isInside(root: string, target: string): boolean {
   const r = resolve(root);
@@ -189,7 +189,7 @@ export class SessionManager {
   startBackground(id: string, text: string, notifySessionId?: string): void {
     // Work started by the brain is not a user message: the preference counter does not count it.
     void this.send(id, text, notifySessionId, { origin: 'agent' }).catch((err: unknown) => {
-      this.notify(notifySessionId, `Oturum ${id} başlatılamadı: ${(err as Error).message}`);
+      this.notify(notifySessionId, `Session ${id} could not be started: ${(err as Error).message}`);
     });
   }
 
@@ -220,7 +220,7 @@ export class SessionManager {
       this.setStatus(session, 'error');
       this.deps.onEvent({ type: 'error', sessionId: session.id, message });
       if (session.role === 'worker' && notifySessionId) {
-        this.notify(notifySessionId, `${session.title} hata verdi: ${message}`);
+        this.notify(notifySessionId, `${session.title} failed: ${message}`);
       }
       return { ok: false, error: message };
     } finally {
@@ -234,7 +234,7 @@ export class SessionManager {
             entityOf: (id) => projectKey(this.sessions.get(id)?.cwd ?? session.cwd),
           });
         } catch (err) {
-          this.deps.onEvent({ type: 'error', sessionId: session.id, message: `dünya modeli: ${(err as Error).message}` });
+          this.deps.onEvent({ type: 'error', sessionId: session.id, message: `world model: ${(err as Error).message}` });
         }
       }
     }
@@ -449,7 +449,7 @@ export class SessionManager {
       const last = [...session.messages].reverse().find((m) => m.role === 'assistant');
       this.notify(
         notifySessionId,
-        `${session.title} (${session.id}) bitti [${result.stopReason}]: ${(last?.content ?? 'çıktı yok').slice(0, 600)}`,
+        `${session.title} (${session.id}) finished [${result.stopReason}]: ${(last?.content ?? 'no output').slice(0, 600)}`,
       );
     }
     return { ok: true };

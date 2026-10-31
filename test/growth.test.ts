@@ -171,7 +171,7 @@ describe('ProposalStore', () => {
         reason: 'y',
         files: [{ path: 'app/src/x.ts', before: '', after: 'x' }],
       }),
-    ).rejects.toThrow(/kaynak kopya/);
+    ).rejects.toThrow(/source copy/);
   });
 
   it('a rule proposal is applied and reverted', async () => {
@@ -237,7 +237,7 @@ describe('ProposalStore', () => {
     const open = new ProposalStore({ dataDir, repoRoot, codeEditsEnabled: true });
     expect(await open.apply('p_seed')).toEqual({
       ok: false,
-      error: 'izin dışı yol: server/memory/identity.ts',
+      error: 'path outside allow-list: server/memory/identity.ts',
     });
     expect(readFileSync(target, 'utf8')).toBe('orijinal');
   });
@@ -246,7 +246,7 @@ describe('ProposalStore', () => {
     const dataDir = dir();
     seed(dataDir, { files: [{ path: '../kacis.md', before: '', after: 'x' }] });
     const s = new ProposalStore({ dataDir, repoRoot: dir(), codeEditsEnabled: false });
-    expect(await s.apply('p_seed')).toEqual({ ok: false, error: 'izin dışı yol: ../kacis.md' });
+    expect(await s.apply('p_seed')).toEqual({ ok: false, error: 'path outside allow-list: ../kacis.md' });
   });
 
   it('does not read a file outside the data folder', () => {
@@ -264,6 +264,6 @@ describe('ProposalStore', () => {
     const dataDir = dir();
     seed(dataDir, { status: 'applied', files: [{ path: '../kacis.md', before: 'x', after: 'y' }] });
     const s = new ProposalStore({ dataDir, repoRoot: dir(), codeEditsEnabled: false });
-    expect(await s.revert('p_seed')).toEqual({ ok: false, error: 'izin dışı yol: ../kacis.md' });
+    expect(await s.revert('p_seed')).toEqual({ ok: false, error: 'path outside allow-list: ../kacis.md' });
   });
 });

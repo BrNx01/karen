@@ -60,7 +60,7 @@ describe('evidenceCheck', () => {
       { kind: 'semantic', text: 'puppeteer ile rapor üretilir', concepts: [], evidence: [], base: 0.5 },
       block,
     );
-    expect(rejected?.reason).toBe('kanıt yok');
+    expect(rejected?.reason).toBe('no evidence');
   });
 
   it('rejects an event missing from the transcript', () => {
@@ -70,7 +70,7 @@ describe('evidenceCheck', () => {
       { kind: 'semantic', text: 'puppeteer rapor üretilir', concepts: [], evidence: [999], base: 0.5 },
       block,
     );
-    expect(rejected?.reason).toContain('bilinmeyen olay');
+    expect(rejected?.reason).toContain('unknown event');
   });
 
   it('rejects when the cited event does not support the text', () => {
@@ -121,7 +121,7 @@ describe('evidenceCheck', () => {
       },
       block,
     );
-    expect(rejected?.reason).toMatch(/desteklemiyor/);
+    expect(rejected?.reason).toMatch(/does not support/);
   });
 });
 
@@ -129,7 +129,7 @@ describe('distill', () => {
   it('writes an episodic summary without a model and does not hallucinate', async () => {
     const { log, memory } = seed();
     const result = await distill(memory, log.read());
-    expect(result.skipped).toContain('model yok');
+    expect(result.skipped).toContain('no model');
     const notes = memory.list();
     expect(notes).toHaveLength(1);
     expect(notes[0]?.kind).toBe('episodic');
@@ -160,7 +160,7 @@ describe('distill', () => {
     ]);
     const result = await distill(memory, log.read(), { distiller: fixed(json) });
     expect(memory.list().filter((n) => n.kind === 'semantic')).toEqual([]);
-    expect(result.rejected.map((r) => r.reason).join(' ')).toMatch(/desteklenmiyor|gizlilik/);
+    expect(result.rejected.map((r) => r.reason).join(' ')).toMatch(/does not support|privacy/);
   });
 
   it('does not crash on a model error', async () => {
@@ -169,7 +169,7 @@ describe('distill', () => {
       throw new Error('bağlantı yok');
     };
     const result = await distill(memory, log.read(), { distiller: boom });
-    expect(result.rejected.some((r) => r.reason.includes('başarısız'))).toBe(true);
+    expect(result.rejected.some((r) => r.reason.includes('model call failed'))).toBe(true);
     // the episodic summary is still written
     expect(memory.list().some((n) => n.kind === 'episodic')).toBe(true);
   });

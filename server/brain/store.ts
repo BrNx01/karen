@@ -178,7 +178,7 @@ export class StateStore {
     } else if (signal.kind === 'context_bloat' || signal.kind === 'task_done') {
       event = this.log.append('state_signal', 'brain', 'brain', { signal });
     } else {
-      throw new Error(`türetilen sinyal record edilmez: ${signal.kind}`);
+      throw new Error(`derived signal cannot be recorded: ${signal.kind}`);
     }
     this.apply(event, 'turn');
   }

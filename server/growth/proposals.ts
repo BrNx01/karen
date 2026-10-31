@@ -166,14 +166,14 @@ export async function runChecks(proposal: Proposal, opts: CheckOptions = {}): Pr
   checks.push({
     name: 'size',
     ok: proposal.files.length > 0 && proposal.files.length <= MAX_FILES && changedLines(proposal.files) <= MAX_LINES,
-    detail: `${proposal.files.length} dosya, ${changedLines(proposal.files)} satır (sınır ${MAX_FILES}/${MAX_LINES})`,
+    detail: `${proposal.files.length} files, ${changedLines(proposal.files)} lines (limit ${MAX_FILES}/${MAX_LINES})`,
   });
 
   const forbidden = proposal.files.filter((file) => !isAllowed(file.path, proposal.kind));
   checks.push({
     name: 'allowed-surface',
     ok: forbidden.length === 0,
-    detail: forbidden.length === 0 ? 'yalnız izinli yollar' : `izin dışı: ${forbidden.map((f) => f.path).join(', ')}`,
+    detail: forbidden.length === 0 ? 'allowed paths only' : `outside allow-list: ${forbidden.map((f) => f.path).join(', ')}`,
   });
 
   // Canonicalisation is not a hidden fix: a call using `./`, `//`, `\` or a letter-case
@@ -184,21 +184,21 @@ export async function runChecks(proposal: Proposal, opts: CheckOptions = {}): Pr
     ok: nonCanonical.length === 0,
     detail:
       nonCanonical.length === 0
-        ? 'yollar kanonik'
-        : `yol kanonik değil: ${nonCanonical.map((f) => f.path).join(', ')}`,
+        ? 'paths canonical'
+        : `path not canonical: ${nonCanonical.map((f) => f.path).join(', ')}`,
   });
 
   const secretHit = proposal.files.find((file) => containsSecret(file.after));
   checks.push({
     name: 'no-secrets',
     ok: secretHit === undefined,
-    detail: secretHit ? `sır deseni: ${secretHit.path}` : 'sır yok',
+    detail: secretHit ? `secret pattern: ${secretHit.path}` : 'no secrets',
   });
 
   checks.push({
     name: 'no-tests-weakening',
     ok: !proposal.files.some((file) => normalizePath(file.path).startsWith('test/')),
-    detail: 'testler korumalı',
+    detail: 'tests protected',
   });
 
   if (proposal.kind === 'code') {
@@ -206,7 +206,7 @@ export async function runChecks(proposal: Proposal, opts: CheckOptions = {}): Pr
     checks.push({
       name: 'no-new-deps',
       ok: !proposal.files.some((file) => normalizePath(file.path) === 'package.json'),
-      detail: 'package.json teklif edilemez',
+      detail: 'package.json cannot be proposed',
     });
   }
 
@@ -241,7 +241,7 @@ async function compileAndTest(proposal: Proposal, opts: CheckOptions): Promise<P
         execFileSyncQuiet('ln', ['-s', modules, join(dir, 'node_modules')]);
       }
     } else {
-      return { name: 'build', ok: false, detail: 'node_modules yok: doğrulanamadı (yüksek risk)' };
+      return { name: 'build', ok: false, detail: 'node_modules missing: could not verify (high risk)' };
     }
 
     const tsc = await runNode(join(repoRoot, 'node_modules', 'typescript', 'bin', 'tsc'), ['--noEmit'], dir, opts.timeoutMs);
@@ -255,9 +255,9 @@ async function compileAndTest(proposal: Proposal, opts: CheckOptions): Promise<P
     );
     if (!tests.ok) return { name: 'build', ok: false, detail: `test: ${tests.output.slice(-300)}` };
 
-    return { name: 'build', ok: true, detail: 'tsc + test geçti' };
+    return { name: 'build', ok: true, detail: 'tsc + test passed' };
   } catch (err) {
-    return { name: 'build', ok: false, detail: `doğrulanamadı: ${(err as Error).message.slice(0, 200)}` };
+    return { name: 'build', ok: false, detail: `could not verify: ${(err as Error).message.slice(0, 200)}` };
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -22,7 +22,7 @@ describe('URL evidence gate', () => {
   it('a fabricated URL is rejected', () => {
     const b = block('sonuç: https://example.com/a derleyici hızlandırma üzerine');
     const out = evidenceCheck(candidate('derleyici https://uydurma.test/x hızlandırma'), b);
-    expect(out?.reason).toBe('kaynak url yok');
+    expect(out?.reason).toBe('source url missing');
   });
 
   it('the old rule applies when no URL is present', () => {
@@ -43,7 +43,7 @@ describe('URL evidence gate', () => {
   it('a prefix of a longer URL is not accepted', () => {
     const b = block('sonuç: https://example.com/abc derleyici hızlandırma üzerine');
     const out = evidenceCheck(candidate('derleyici https://example.com/a hızlandırma'), b);
-    expect(out?.reason).toBe('kaynak url yok');
+    expect(out?.reason).toBe('source url missing');
   });
 
   it('a real URL ending with a paren matches exactly', () => {

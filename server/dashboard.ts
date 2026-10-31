@@ -92,7 +92,7 @@ export function buildDashboard(input: {
     .map((e) => ({
       id: e.id,
       at: e.ts,
-      tool: String(e.payload['tool'] ?? 'araç'),
+      tool: String(e.payload['tool'] ?? 'tool'),
       ok: e.payload['ok'] === true,
       detail: (e.body ?? '').replace(/\s+/g, ' ').trim().slice(0, 160),
     }));
@@ -107,23 +107,23 @@ export function buildDashboard(input: {
 
   const events: DashboardData['events'] = [];
   if (pendingApprovals > 0) {
-    events.push({ at: Date.now(), text: `${pendingApprovals} onay bekliyor`, tone: 'warn' });
+    events.push({ at: Date.now(), text: `${pendingApprovals} approvals pending`, tone: 'warn' });
   }
   if (conflicts > 0) {
-    events.push({ at: Date.now(), text: `${conflicts} çelişkili hatıra çözüm bekliyor`, tone: 'warn' });
+    events.push({ at: Date.now(), text: `${conflicts} conflicting memories awaiting resolution`, tone: 'warn' });
   }
   for (const action of recentActions.slice(0, 5)) {
     events.push({
       at: action.at,
-      text: `${action.tool}: ${action.detail || (action.ok ? 'tamam' : 'başarısız')}`,
+      text: `${action.tool}: ${action.detail || (action.ok ? 'ok' : 'failed')}`,
       tone: action.ok ? 'ok' : 'warn',
     });
   }
   if (lastError) {
-    events.push({ at: lastError.ts, text: `hata: ${String(lastError.payload['message'] ?? '')}`.slice(0, 140), tone: 'warn' });
+    events.push({ at: lastError.ts, text: `error: ${String(lastError.payload['message'] ?? '')}`.slice(0, 140), tone: 'warn' });
   }
   if (episodic > 0) {
-    events.push({ at: Date.now(), text: `${episodic} anı, ${semantic} bilgi hatırlanıyor`, tone: 'info' });
+    events.push({ at: Date.now(), text: `${episodic} episodic, ${semantic} semantic memories recalled`, tone: 'info' });
   }
 
   return {

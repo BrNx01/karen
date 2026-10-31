@@ -428,7 +428,7 @@ export function createKarenServer(opts: KarenServerOptions): KarenServer {
       if (req.method === 'POST' && parts[2] === 'transcribe') {
         const audio = await readRaw(req, 25_000_000);
         if (audio.length === 0) {
-          sendJson(res, 400, { error: 'ses verisi boş' });
+          sendJson(res, 400, { error: 'audio data is empty' });
           return;
         }
         const result = await voice.transcribe(audio);

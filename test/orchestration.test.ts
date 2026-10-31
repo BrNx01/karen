@@ -95,7 +95,7 @@ describe('background sessions', () => {
     const result = await spawn.run({ task: 'iş 3', cwd: 'C:\\p' }, { cwd: 'C:\\p', signal: new AbortController().signal });
 
     expect(result.ok).toBe(false);
-    expect(result.output).toContain('sınırı dolu');
+    expect(result.output).toContain('limit reached');
     expect(manager.list().length).toBe(before); // hayalet oturum açılmadı
     expect(events.some((e) => e.type === 'notice' && e.text.includes('sınırı'))).toBe(false);
     await waitFor(() => manager.activeBackground() === 0);
@@ -111,7 +111,7 @@ describe('background sessions', () => {
       { cwd: 'C:\\proj', signal: new AbortController().signal },
     );
     expect(result.ok).toBe(false);
-    expect(result.output).toContain('cwd izinli değil');
+    expect(result.output).toContain('cwd not allowed');
   });
 
   it('beyin kendini iptal edemez', async () => {

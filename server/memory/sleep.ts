@@ -227,7 +227,7 @@ export function acquireLock(lockPath: string): LockClaim {
   const existing = readLock(lockPath);
   if (existing !== null) {
     if (isAlive(existing.pid) && Date.now() - existing.at < LOCK_STALE_MS) {
-      return { ok: false, reason: `uyku zaten çalışıyor (pid ${existing.pid})` };
+      return { ok: false, reason: `sleep already running (pid ${existing.pid})` };
     }
     rmSync(lockPath, { force: true }); // stale lock, or the owner died
   }
@@ -238,7 +238,7 @@ export function acquireLock(lockPath: string): LockClaim {
     closeSync(fd);
     return { ok: true };
   } catch {
-    return { ok: false, reason: 'uyku kilidi alınamadı' };
+    return { ok: false, reason: 'could not acquire sleep lock' };
   }
 }
 

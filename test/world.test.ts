@@ -107,7 +107,7 @@ describe('WorldModel', () => {
     world.extractFromText('fiyat 250 TL', 'p', e2.id, Date.now());
     const result = world.compute('sum', 'fiyat', 'p', { includeHistory: true });
     expect(result.value).toBeNull();
-    expect(result.reason).toContain('geçmiş');
+    expect(result.reason).toContain('historical');
   });
 
   it('facts falling back to kind do not supersede each other', () => {
@@ -183,7 +183,7 @@ describe('WorldModel', () => {
     world.extractFromText('toplantı 01.01.2020', 'p', e1.id);
     const result = world.compute('next', 'toplantı', 'p');
     expect(result.value).toBeNull();
-    expect(result.reason).toContain('gelecekte');
+    expect(result.reason).toContain('future');
   });  it('rebuild leaves the projection unchanged', () => {
     const { world, log } = setup();
     const event = log.append('message', 'user', 's1', { role: 'user' }, 'bütçe 500 TL');
@@ -210,6 +210,6 @@ describe('WorldModel', () => {
     world.extractFromText('bütçe 500 TL', 'p', event.id);
     const context = world.context();
     expect(context).toContain('World model');
-    expect(context).toContain(`kaynak: ${event.id}`);
+    expect(context).toContain(`source: ${event.id}`);
   });
 });

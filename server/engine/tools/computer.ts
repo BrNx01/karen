@@ -12,8 +12,8 @@ function run(command: string, args: string[], timeoutMs = 20_000): Promise<ToolR
       args,
       { timeout: timeoutMs, windowsHide: true, maxBuffer: 8 * 1024 * 1024 },
       (err, stdout, stderr) => {
-        if (err) resolve({ ok: false, output: `başarısız: ${err.message}\n${stderr ?? ''}`.trim() });
-        else resolve({ ok: true, output: (stdout || stderr || 'tamam').trim() });
+        if (err) resolve({ ok: false, output: `failed: ${err.message}\n${stderr ?? ''}`.trim() });
+        else resolve({ ok: true, output: (stdout || stderr || 'ok').trim() });
       },
     );
   });
@@ -53,7 +53,7 @@ export function computerTools(opts: {
       async run(args) {
         const name = typeof args['name'] === 'string' ? args['name'].trim() : '';
         if (name === '') return { ok: false, output: 'name required' };
-        if (!isWindows) return { ok: false, output: 'yalnız Windows' };
+        if (!isWindows) return { ok: false, output: 'Windows only' };
         const extra = typeof args['args'] === 'string' ? args['args'] : '';
         // PowerShell Start-Process: accepts a path or an application name.
         const safeName = name.replace(/'/g, "''");
@@ -62,7 +62,7 @@ export function computerTools(opts: {
           ? `Start-Process -FilePath '${safeName}' -ArgumentList '${safeArgs}'`
           : `Start-Process '${safeName}'`;
         const result = await powershell(script, 20_000);
-        return result.ok ? { ok: true, output: `açıldı: ${name}` } : result;
+        return result.ok ? { ok: true, output: `opened: ${name}` } : result;
       },
     },
     {
@@ -76,9 +76,9 @@ export function computerTools(opts: {
         },
       },
       async run(args) {
-        if (!isWindows) return { ok: false, output: 'yalnız Windows' };
+        if (!isWindows) return { ok: false, output: 'Windows only' };
         const dir = screenshotDir(opts.dataDir);
-        const rawName = typeof args['name'] === 'string' ? args['name'] : `ekran-${Date.now()}`;
+        const rawName = typeof args['name'] === 'string' ? args['name'] : `screen-${Date.now()}`;
         const name = rawName.replace(/[^\w.-]/g, '_').slice(0, 60);
         const file = join(dir, name.endsWith('.png') ? name : `${name}.png`);
         const script = [
@@ -92,7 +92,7 @@ export function computerTools(opts: {
         ].join('; ');
         const result = await powershell(script, 30_000);
         if (!result.ok) return result;
-        if (!existsSync(file)) return { ok: false, output: 'görüntü oluşmadı' };
+        if (!existsSync(file)) return { ok: false, output: 'image was not created' };
         const size = statSync(file).size;
         return { ok: true, output: `${file} (${Math.round(size / 1024)} KB)` };
       },
@@ -105,7 +105,7 @@ export function computerTools(opts: {
         inputSchema: { type: 'object', properties: {} },
       },
       async run() {
-        if (!isWindows) return { ok: false, output: 'yalnız Windows' };
+        if (!isWindows) return { ok: false, output: 'Windows only' };
         const result = await powershell('Get-Clipboard -Raw');
         return result.ok ? { ok: true, output: result.output.slice(0, 20_000) } : result;
       },
@@ -122,7 +122,7 @@ export function computerTools(opts: {
         },
       },
       async run(args) {
-        if (!isWindows) return { ok: false, output: 'yalnız Windows' };
+        if (!isWindows) return { ok: false, output: 'Windows only' };
         const text = typeof args['text'] === 'string' ? args['text'].slice(0, 100_000) : '';
         if (text === '') return { ok: false, output: 'text required' };
         return new Promise<ToolResult>((resolve) => {
@@ -130,7 +130,7 @@ export function computerTools(opts: {
             'powershell.exe',
             ['-NoProfile', '-NonInteractive', '-Command', 'Set-Clipboard -Value ([Console]::In.ReadToEnd())'],
             { timeout: 15_000, windowsHide: true },
-            (err) => (err ? resolve({ ok: false, output: err.message }) : resolve({ ok: true, output: 'panoya yazıldı' })),
+            (err) => (err ? resolve({ ok: false, output: err.message }) : resolve({ ok: true, output: 'written to clipboard' })),
           );
           proc.stdin?.end(text);
         });
@@ -153,7 +153,7 @@ export function computerTools(opts: {
         },
       },
       async run(args) {
-        if (!isWindows) return { ok: false, output: 'yalnız Windows' };
+        if (!isWindows) return { ok: false, output: 'Windows only' };
         const action = String(args['action'] ?? '');
         const keys: Record<string, string> = {
           play_pause: '0xB3',
@@ -164,7 +164,7 @@ export function computerTools(opts: {
           mute: '0xAD',
         };
         const code = keys[action];
-        if (!code) return { ok: false, output: `bilinmeyen işlem: ${action}` };
+        if (!code) return { ok: false, output: `unknown action: ${action}` };
         const script = [
           '$sig = "[DllImport(\\\\"user32.dll\\\\")] public static extern void keybd_event(byte b, byte c, uint d, int e);"',
           'Add-Type -MemberDefinition $sig -Name K -Namespace W',
@@ -172,7 +172,7 @@ export function computerTools(opts: {
           `[W.K]::keybd_event(${code},0,2,0)`,
         ].join('; ');
         const result = await powershell(script, 15_000);
-        return result.ok ? { ok: true, output: `medya: ${action}` } : result;
+        return result.ok ? { ok: true, output: `media: ${action}` } : result;
       },
     },
     {
@@ -187,7 +187,7 @@ export function computerTools(opts: {
         },
       },
       async run(args) {
-        if (!isWindows) return { ok: false, output: 'yalnız Windows' };
+        if (!isWindows) return { ok: false, output: 'Windows only' };
         const title = typeof args['title'] === 'string' ? args['title'].trim() : '';
         if (title === '') return { ok: false, output: 'title required' };
         const safe = title.replace(/'/g, "''");
@@ -195,7 +195,7 @@ export function computerTools(opts: {
           '$sig = "[DllImport(\\\\"user32.dll\\\\")] public static extern bool SetForegroundWindow(IntPtr h);"',
           'Add-Type -MemberDefinition $sig -Name W -Namespace Z',
           `$p = Get-Process | Where-Object { $_.MainWindowTitle -like '*${safe}*' } | Select-Object -First 1`,
-          'if ($p) { [Z.W]::SetForegroundWindow($p.MainWindowHandle); "odaklandı: " + $p.MainWindowTitle } else { "pencere bulunamadı" }',
+          'if ($p) { [Z.W]::SetForegroundWindow($p.MainWindowHandle); "focused: " + $p.MainWindowTitle } else { "window not found" }',
         ].join('; ');
         return powershell(script, 15_000);
       },

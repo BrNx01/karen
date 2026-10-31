@@ -36,10 +36,10 @@ export function worldTools(world: WorldModel): Tool[] {
           ...(args['includeHistory'] === true ? { includeHistory: true } : {}),
           limit: typeof args['limit'] === 'number' ? args['limit'] : 20,
         });
-        if (facts.length === 0) return { ok: true, output: 'kayıtlı gerçek yok' };
+        if (facts.length === 0) return { ok: true, output: 'no stored facts' };
         const lines = facts.map((f) => {
-          const window = f.validTo === null ? 'geçerli' : `sona erdi: ${new Date(f.validTo).toISOString().slice(0, 10)}`;
-          return `${f.entity} · ${f.attribute} = ${f.valueText}${f.unit ? ` (${f.unit})` : ''} [${window}, kaynak: ${f.sourceEvent}]`;
+          const window = f.validTo === null ? 'valid' : `ended: ${new Date(f.validTo).toISOString().slice(0, 10)}`;
+          return `${f.entity} · ${f.attribute} = ${f.valueText}${f.unit ? ` (${f.unit})` : ''} [${window}, source: ${f.sourceEvent}]`;
         });
         return { ok: true, output: lines.join('\n') };
       },
@@ -63,7 +63,7 @@ export function worldTools(world: WorldModel): Tool[] {
       },
       async run(args) {
         const op = String(args['op'] ?? '') as ComputeOp;
-        if (!OPS.includes(op)) return { ok: false, output: `geçersiz işlem: ${op}` };
+        if (!OPS.includes(op)) return { ok: false, output: `invalid operation: ${op}` };
         const attribute = typeof args['attribute'] === 'string' ? args['attribute'] : '';
         if (attribute === '') return { ok: false, output: 'attribute required' };
         const result = world.compute(
@@ -73,11 +73,11 @@ export function worldTools(world: WorldModel): Tool[] {
           { includeHistory: args['includeHistory'] === true },
         );
         if (result.reason) return { ok: false, output: result.reason };
-        if (result.matched === 0) return { ok: false, output: `"${attribute}" için kayıt yok` };
-        const value = result.value === null ? 'yok' : String(result.value);
+        if (result.matched === 0) return { ok: false, output: `no records for "${attribute}"` };
+        const value = result.value === null ? 'none' : String(result.value);
         return {
           ok: true,
-          output: `${op}(${attribute}) = ${value} · ${result.matched} kayıt · kaynaklar: ${result.sourceEvents
+          output: `${op}(${attribute}) = ${value} · ${result.matched} records · sources: ${result.sourceEvents
             .slice(0, 6)
             .map((id) => `#${id}`)
             .join(' ')}`,
@@ -96,7 +96,7 @@ export function worldTools(world: WorldModel): Tool[] {
       },
       async run(args) {
         const rows = world.history(typeof args['limit'] === 'number' ? args['limit'] : 10);
-        if (rows.length === 0) return { ok: true, output: 'kayıtlı işlem yok' };
+        if (rows.length === 0) return { ok: true, output: 'no stored actions' };
         return {
           ok: true,
           output: rows

@@ -290,14 +290,14 @@ export async function startKarenServer(opts: ServeOptions = {}): Promise<Running
       transcribe: (audio) =>
         isWav(audio)
           ? whisper.transcribe(audio, currentSettings().voiceLang.slice(0, 2))
-          : Promise.resolve({ ok: false, reason: 'WAV bekleniyor' }),
+          : Promise.resolve({ ok: false, reason: 'WAV expected' }),
       speak: async (text) => {
         const info = voiceCache ?? (await detectVoice(dataDir, currentSettings().voiceLang));
         const settings = currentSettings();
         const looksTurkish =
           /[çğıöşüÇĞİÖŞÜ]|\b(ve|bir|için|değil|tamam|merhaba|evet|hayır|lütfen|teşekkür|nasılsın)\b/i.test(text);
         if (looksTurkish && !info.speech.turkish) {
-          return { ok: false, reason: 'Türkçe ses yüklü değil (Windows → Konuşma → Ses ekle)' };
+          return { ok: false, reason: 'Turkish voice is not installed (Windows → Speech → Add voices)' };
         }
         const voice =
           settings.voiceName ??

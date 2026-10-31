@@ -25,7 +25,7 @@ export type DmnDeps = {
   onError?: (message: string) => void;
 };
 
-const UNVERIFIED_URL = '[kaynak doğrulanamadı]';
+const UNVERIFIED_URL = '[source unverified]';
 
 const COOLDOWN_MS = 10 * 60_000;
 const INBOX_KIND: Record<DriveName, InboxKind> = {
@@ -66,26 +66,26 @@ export class Dmn {
 
   /** One turn attempt. If the conditions do not hold, {ran:false, reason}. */
   tick(now: number): { ran: boolean; reason?: string; sessionId?: string } {
-    if (this.stopped) return { ran: false, reason: 'durduruldu' };
+    if (this.stopped) return { ran: false, reason: 'stopped' };
 
     const settings = this.deps.settings();
-    if (!settings.enabled) return { ran: false, reason: 'kapalı' };
-    if (!this.deps.idle.isIdle(settings.idleMinutes)) return { ran: false, reason: 'kullanıcı etkin' };
+    if (!settings.enabled) return { ran: false, reason: 'off' };
+    if (!this.deps.idle.isIdle(settings.idleMinutes)) return { ran: false, reason: 'user active' };
 
     // Conditions checked BEFORE opening a session: no session and no tokens wasted.
-    if (this.running || this.busySession()) return { ran: false, reason: 'oturum meşgul' };
-    if (!this.deps.sessions.canStartBackground()) return { ran: false, reason: 'arka plan sınırı' };
+    if (this.running || this.busySession()) return { ran: false, reason: 'session busy' };
+    if (!this.deps.sessions.canStartBackground()) return { ran: false, reason: 'background limit' };
 
     // The cooldown covers attempts too: a provider that keeps failing does not open a session every minute.
-    if (this.lastAttempt !== null && now - this.lastAttempt < COOLDOWN_MS) return { ran: false, reason: 'bekleme' };
-    if (this.runsToday(now) >= settings.dailyRuns) return { ran: false, reason: 'günlük sınır' };
+    if (this.lastAttempt !== null && now - this.lastAttempt < COOLDOWN_MS) return { ran: false, reason: 'cooldown' };
+    if (this.runsToday(now) >= settings.dailyRuns) return { ran: false, reason: 'daily limit' };
 
     const drive = selectDrive({
       ...this.deps.buildDriveInput(),
       lastDrive: this.lastDrive,
       repeats: this.repeats,
     });
-    if (!drive) return { ran: false, reason: 'dürtü yok' };
+    if (!drive) return { ran: false, reason: 'no drive' };
 
     let sessionId: string;
     this.lastAttempt = now;
@@ -93,13 +93,13 @@ export class Dmn {
       sessionId = this.deps.sessions.create({
         role: 'worker',
         autonomous: true,
-        title: 'otonom',
+        title: 'autonomous',
         cwd: this.deps.cwd,
       }).id;
     } catch (err) {
       // If the session could not be opened, the lock must not stay stuck; the next tick retries.
       this.deps.log.append('error', 'system', 'brain', { message: `dmn oturum: ${(err as Error).message}` });
-      return { ran: false, reason: 'oturum açılamadı' };
+      return { ran: false, reason: 'could not open session' };
     }
 
     // The flag is set AFTER create: a throwing create does not leave the lock behind.
@@ -154,7 +154,7 @@ export class Dmn {
           inboxId: null,
           at: now,
           ok: false,
-          error: sent.error ?? 'bilinmeyen hata',
+          error: sent.error ?? 'unknown error',
         });
         return;
       }
@@ -178,7 +178,7 @@ export class Dmn {
       if (this.stopped) return;
 
       const last = [...this.deps.sessions.history(sessionId)].reverse().find((m) => m.role === 'assistant');
-      const raw = (last?.content ?? '').trim().slice(0, 300) || `${drive.name}: çıktı yok`;
+      const raw = (last?.content ?? '').trim().slice(0, 300) || `${drive.name}: no output`;
       // The inbox line is raw model output: an address without a source must not reach the user.
       const text = guardUrls(raw, toolSources(this.deps.log.read(sessionId)));
       if (this.stopped) return;

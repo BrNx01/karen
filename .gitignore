@@ -1,0 +1,12 @@
+node_modules
+dist
+release
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.karen/
+.zero/
+.superpowers/
+graphify-out/
+.karen-tmp/

@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KAREN — local agent hub and second brain</title>
+    <meta name="description" content="A local AI agent that runs on your machine, learns who you are, remembers, and does the work. Talk, type, delegate." />
+    <meta property="og:title" content="KAREN — local agent hub" />
+    <meta property="og:description" content="A local agent that runs on your machine, remembers, and does the work." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2308080a'/><text x='50' y='68' font-size='58' font-family='Arial' font-weight='bold' fill='%23e11d2e' text-anchor='middle'>K</text></svg>" />
+    <style>
+      :root {
+        --bg: #08080a;
+        --panel: #121216;
+        --line: #2a1216;
+        --text: #ececef;
+        --muted: #9a9aa2;
+        --accent: #e11d2e;
+        --accent-soft: #ff5a66;
+        --ok: #5dd1a4;
+        --warn: #ffc25c;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, -apple-system, "Segoe UI", system-ui, sans-serif;
+        background:
+          radial-gradient(900px 480px at 12% -8%, rgba(225, 29, 46, 0.16), transparent 62%),
+          radial-gradient(760px 420px at 96% 4%, rgba(255, 90, 102, 0.08), transparent 58%),
+          var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--accent-soft); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+      header {
+        display: flex; align-items: center; gap: 14px;
+        padding: 22px 0;
+      }
+      .logo {
+        width: 38px; height: 38px; border-radius: 12px;
+        display: grid; place-items: center;
+        font-weight: 800; color: #fff;
+        background: linear-gradient(150deg, var(--accent-soft), var(--accent));
+        box-shadow: 0 0 28px rgba(225, 29, 46, 0.4);
+      }
+      .brand b { letter-spacing: 0.3em; font-size: 14px; }
+      .brand span { display: block; font-size: 10px; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; }
+      header nav { margin-left: auto; display: flex; gap: 18px; font-size: 14px; }
+      header nav a { color: var(--muted); }
+      header nav a:hover { color: var(--text); }
+
+      .hero { padding: 56px 0 40px; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 44px; align-items: center; }
+      h1 { font-size: clamp(34px, 4.4vw, 54px); line-height: 1.08; margin: 0 0 18px; letter-spacing: -0.02em; }
+      h1 em { font-style: normal; background: linear-gradient(92deg, var(--accent-soft), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .sub { font-size: 17px; color: #c4c4cb; max-width: 34em; margin: 0 0 28px; }
+      .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 13px 22px; border-radius: 12px; font-weight: 600; font-size: 15px;
+        border: 1px solid rgba(225, 29, 46, 0.55);
+        background: linear-gradient(180deg, var(--accent-soft), var(--accent));
+        color: #fff;
+        box-shadow: 0 12px 32px rgba(225, 29, 46, 0.28);
+      }
+      .btn:hover { text-decoration: none; filter: brightness(1.07); }
+      .btn.ghost { background: transparent; color: #f3c9cd; border-color: var(--line); box-shadow: none; }
+      .note { font-size: 12.5px; color: var(--muted); margin-top: 14px; }
+
+      .orb {
+        position: relative; aspect-ratio: 1; max-width: 380px; margin: 0 auto;
+        display: grid; place-items: center; border-radius: 50%;
+        background: radial-gradient(circle at 40% 32%, rgba(255, 90, 102, 0.2), transparent 55%), rgba(18, 8, 10, 0.7);
+        box-shadow: inset 0 0 60px rgba(225, 29, 46, 0.2), 0 0 90px rgba(225, 29, 46, 0.22);
+      }
+      .orb::before, .orb::after {
+        content: ''; position: absolute; inset: 0; border-radius: 50%;
+        border: 1px solid rgba(255, 90, 102, 0.22);
+      }
+      .orb::before { transform: rotateX(72deg); animation: spin 18s linear infinite; }
+      .orb::after { inset: 14%; border-color: rgba(225, 29, 46, 0.3); transform: rotateX(64deg) rotateY(40deg); animation: spin 24s linear infinite reverse; }
+      @keyframes spin { to { transform: rotate3d(0, 1, 0.25, 360deg) rotateX(70deg); } }
+      .orb b { font-size: 30px; letter-spacing: 0.34em; color: #ffd9dd; text-shadow: 0 0 26px rgba(255, 90, 102, 0.6); }
+      .orb small { position: absolute; bottom: 24%; font-size: 10px; letter-spacing: 0.18em; color: #c98a91; }
+
+      section { padding: 46px 0; }
+      h2 { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: #b9868c; margin: 0 0 22px; }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+      .card {
+        border: 1px solid var(--line); border-radius: 16px; padding: 20px;
+        background: var(--panel);
+      }
+      .card h3 { margin: 0 0 8px; font-size: 16px; }
+      .card p { margin: 0; color: var(--muted); font-size: 14px; }
+      .card .ico { font-size: 18px; margin-bottom: 10px; display: block; color: var(--accent-soft); }
+
+      .term {
+        border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+        background: #0c0c0f; font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+        font-size: 13px; line-height: 1.7;
+      }
+      .term-bar {
+        display: flex; align-items: center; gap: 7px; padding: 10px 14px;
+        border-bottom: 1px solid var(--line); background: #101014;
+      }
+      .term-bar i { width: 9px; height: 9px; border-radius: 50%; background: #3a3a42; }
+      .term-bar i:first-child { background: var(--accent); }
+      .term-bar span { margin-left: 8px; color: var(--muted); font-size: 11.5px; }
+      .term pre { margin: 0; padding: 16px 18px; overflow-x: auto; color: #d6d6dc; }
+      .term .p { color: var(--accent-soft); }
+      .term .ok { color: var(--ok); }
+      .term .dim { color: var(--muted); }
+      .term .warn { color: var(--warn); }
+
+      .steps { counter-reset: s; display: grid; gap: 12px; }
+      .step {
+        display: grid; grid-template-columns: 34px 1fr; gap: 14px; align-items: start;
+        border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; background: var(--panel);
+      }
+      .step::before {
+        counter-increment: s; content: counter(s);
+        width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+        background: rgba(225, 29, 46, 0.14); color: #ffb3b9; font-weight: 700; font-size: 13px;
+        border: 1px solid rgba(225, 29, 46, 0.32);
+      }
+      .step b { display: block; margin-bottom: 2px; }
+      .step span { color: var(--muted); font-size: 14px; }
+      code {
+        font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+        background: rgba(255, 255, 255, 0.06); padding: 2px 7px; border-radius: 6px; font-size: 13px;
+      }
+
+      footer { border-top: 1px solid var(--line); margin-top: 30px; padding: 26px 0 40px; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 16px; }
+      footer .sp { flex: 1; }
+
+      @media (max-width: 860px) {
+        .hero { grid-template-columns: 1fr; }
+        .orb { max-width: 260px; }
+        header nav { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .orb::before, .orb::after { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="logo">K</div>
+        <div class="brand"><b>KAREN</b><span>command center</span></div>
+        <nav>
+          <a href="#features">Features</a>
+          <a href="#install">Install</a>
+          <a href="#how">How it works</a>
+          <a href="https://github.com/BrNx01/karen">GitHub</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div>
+            <h1>An agent that runs on your machine and <em>knows you</em>.</h1>
+            <p class="sub">
+              KAREN is not a cloud chat box. It reaches your files, your shell and your screen,
+              remembers what you talked about, distils what it learns and does the work.
+              You pick the model — local or cloud.
+            </p>
+            <div class="cta">
+              <a class="btn" href="https://github.com/BrNx01/karen/releases/latest">Download for Windows</a>
+              <a class="btn ghost" href="https://github.com/BrNx01/karen">Source code</a>
+            </div>
+            <p class="note">
+              The installer is unsigned — Windows may warn about an “unknown publisher”.
+              Once installed, the app downloads its own updates.
+            </p>
+          </div>
+          <div class="orb"><b>KAREN</b><small>second brain</small></div>
+        </section>
+
+        <section id="demo">
+          <h2>Try it</h2>
+          <div class="term">
+            <div class="term-bar"><i></i><i></i><i></i><span>karen — zsh</span></div>
+            <pre><span class="p">$</span> npm run karen -- serve
+<span class="ok">KAREN ready:</span> http://127.0.0.1:4317
+
+<span class="p">you ›</span> remind me that the rent goes up in March
+<span class="dim">karen › noted — valid from 2026-03-01. want a reminder the day before?</span>
+
+<span class="p">you ›</span> what did I spend on the workshop last month?
+<span class="dim">karen › 4,200 TL across 3 payments. the last one on Oct 24 was 1,200 TL.</span>
+
+<span class="p">you ›</span> why did the build fail this morning?
+<span class="warn">approval ›</span> run_command: git log --oneline -5 <span class="dim">[y/N]</span></pre>
+          </div>
+        </section>
+
+        <section id="features">
+          <h2>What it does</h2>
+          <div class="grid">
+            <div class="card">
+              <span class="ico">🎙</span>
+              <h3>Talk, type, delegate</h3>
+              <p>Speak into the mic, hear the answer. Wake it with “hey karen”. Recognition runs locally; your audio never leaves the machine.</p>
+            </div>
+            <div class="card">
+              <span class="ico">◈</span>
+              <h3>Remembers, never deletes</h3>
+              <p>Episodes, facts and skills live in separate layers. Repetition strengthens them, disuse fades them — but nothing is silently dropped.</p>
+            </div>
+            <div class="card">
+              <span class="ico">◉</span>
+              <h3>Has an inner state</h3>
+              <p>
+                Cortisol, dopamine, serotonin and fatigue are recomputed every turn. They change tone, sampling
+                temperature and context budget: no jokes in a crisis, suggestions when work is going well, quieter at night.
+              </p>
+            </div>
+            <div class="card">
+              <span class="ico">🧮</span>
+              <h3>Does the maths</h3>
+              <p>Budgets, durations and dates are kept as typed facts. “How much is left” and “when was the last time” are answered from the source, not guessed.</p>
+            </div>
+            <div class="card">
+              <span class="ico">🖥</span>
+              <h3>Uses the computer</h3>
+              <p>Reads and writes files, runs commands, opens apps, takes screenshots, drives the clipboard — every call goes through a permission gate.</p>
+            </div>
+            <div class="card">
+              <span class="ico">◆</span>
+              <h3>Works in the background</h3>
+              <p>The brain opens its own sessions and brings the result back when a job is done. You never have to watch them.</p>
+            </div>
+            <div class="card">
+              <span class="ico">☾</span>
+              <h3>Learns while you are away</h3>
+              <p>When it notices you are idle it opens a restricted session, researches, writes what it learned into memory and leaves one line for you. Read-only, off by default.</p>
+            </div>
+            <div class="card">
+              <span class="ico">❖</span>
+              <h3>Shows the map</h3>
+              <p>One canvas: zoom out for continents (projects), in for cities (concepts) and streets (notes). Zoom only changes visibility — no node ever moves. Trauma notes carry a red ring.</p>
+            </div>
+            <div class="card">
+              <span class="ico">◈</span>
+              <h3>A fixed character</h3>
+              <p>KAREN’s identity sits in a read-only core and comes first in every prompt. The self-improvement system cannot even propose changing it; a manual edit quietly reverts.</p>
+            </div>
+            <div class="card">
+              <span class="ico">✦</span>
+              <h3>Every provider</h3>
+              <p>Ollama, LM Studio, llama.cpp, vLLM, Anthropic, OpenAI, Google, Groq, Cerebras, DeepSeek, Mistral, OpenRouter, Together, xAI, Fireworks, Perplexity, Azure.</p>
+            </div>
+            <div class="card">
+              <span class="ico">◇</span>
+              <h3>Concepts that co-occur connect</h3>
+              <p>
+                Two memories recalled in the same turn thicken their link; an unused link thins but is never deleted.
+                Once a link is strong enough, the memory surfaces on its own even when the words do not match.
+              </p>
+            </div>
+            <div class="card">
+              <span class="ico">↻</span>
+              <h3>Updates itself</h3>
+              <p>When a new version ships, the app downloads it and offers a restart. No uninstall, no reinstall.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="install">
+          <h2>Install</h2>
+          <div class="steps">
+            <div class="step">
+              <div><b>Download the installer</b><span>Grab <code>KAREN-Setup-1.0.0.exe</code> from <a href="https://github.com/BrNx01/karen/releases/latest">Releases</a>.</span></div>
+            </div>
+            <div class="step">
+              <div><b>Pick a model</b><span>Settings → Model and provider. For local use install <a href="https://ollama.com">Ollama</a>; for cloud, paste a key. With no key the app falls back to a local model.</span></div>
+            </div>
+            <div class="step">
+              <div><b>Optional: local voice</b><span><code>karen voice-setup --yes</code> downloads whisper (~150 MB). Your audio never leaves the machine.</span></div>
+            </div>
+            <div class="step">
+              <div><b>The dashboard opens</b><span>Agents, memory, recent actions, system state. Type at the bottom or press the mic.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="how">
+          <h2>How it works</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Everything local</h3>
+              <p>The event log, memory and settings live on your disk. The server listens on <code>127.0.0.1</code> only and requires a token.</p>
+            </div>
+            <div class="card">
+              <h3>No claim without evidence</h3>
+              <p>Every distilled note carries the event ids that support it. A note with no citation, unsupported by the transcript, is rejected.</p>
+            </div>
+            <div class="card">
+              <h3>Permission gate</h3>
+              <p>Reads are free; writes stay inside the project root; deletion, network, interpreters and anything that spends money ask first.</p>
+            </div>
+            <div class="card">
+              <h3>Feelings are evidence too</h3>
+              <p>
+                The inner state is not invented: it is computed from tests, errors, corrections and elapsed time.
+                It can be rebuilt from the log — delete the table and the same values come back. The model may suggest at most ±0.10.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Trauma never cools, intuition carries no prose</h3>
+              <p>
+                A trauma-marked memory never goes dormant and its strength never drops below the floor; the mark comes
+                from deterministic detection or your approval, never from the model. Old, strong notes are still
+                recalled as prose; their shared concepts are also added as a one-line weight hint with source ids.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <span>KAREN · local agent hub</span>
+        <span class="sp"></span>
+        <a href="https://github.com/BrNx01/karen">GitHub</a>
+        <a href="https://github.com/BrNx01/karen/releases">Releases</a>
+        <a href="https://github.com/BrNx01/karen/issues">Issues</a>
+      </footer>
+    </div>
+  </body>
+</html>

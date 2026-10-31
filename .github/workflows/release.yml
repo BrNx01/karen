@@ -1,0 +1,52 @@
+name: Release
+
+# A tag like v1.0.0 builds the Windows installer and publishes it to GitHub
+# Releases. Installed apps pick the version up through electron-updater: the
+# user never uninstalls and reinstalls by hand.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Tests
+        run: npm test
+
+      # electron-builder's implicit rebuild is skipped when node_modules was installed
+      # for the local Node ABI; the packaged app then dies loading better-sqlite3.
+      - name: Rebuild native modules for Electron
+        run: npx electron-rebuild -f -w better-sqlite3
+
+      - name: Build and publish the installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run release
+
+      # electron-builder creates a draft; publish it so the updater can see it.
+      - name: Publish the draft
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v$(node -p "require('./package.json').version")"
+          gh release edit "$tag" --draft=false --title "KAREN $tag" --repo "$GITHUB_REPOSITORY"

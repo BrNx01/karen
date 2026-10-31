@@ -1,0 +1,110 @@
+{
+  "name": "karen",
+  "productName": "KAREN",
+  "version": "1.0.0",
+  "private": true,
+  "author": "KAREN contributors",
+  "description": "Local agent hub and second brain - a JARVIS-style command center",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BrNx01/karen.git"
+  },
+  "homepage": "https://brnx01.github.io/karen/",
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json && npm run app:build",
+    "app:build": "vite build --config app/vite.config.ts",
+    "app:dev": "vite --config app/vite.config.ts",
+    "karen": "tsx server/cli.ts",
+    "desktop": "npm run build && electron .",
+    "dist": "npm run build && electron-builder --win --publish never",
+    "dist:dir": "npm run build && electron-builder --win --dir",
+    "release": "npm run build && electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.12.0",
+    "better-sqlite3": "^12.0.0",
+    "electron-updater": "^6.8.11",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/ws": "^8.18.2",
+    "@vitejs/plugin-react": "^4.7.0",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vite": "^5.4.21",
+    "vitest": "^2.1.0"
+  },
+  "build": {
+    "appId": "com.karen.app",
+    "productName": "KAREN",
+    "directories": {
+      "output": "release",
+      "buildResources": "electron"
+    },
+    "icon": "electron/icon.png",
+    "files": [
+      "dist/**/*",
+      "app/dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/better-sqlite3/**",
+      "app/dist/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "executableName": "KAREN",
+      "artifactName": "KAREN-Setup-${version}.exe",
+      "signAndEditExecutable": false,
+      "publish": [
+        {
+          "provider": "github",
+          "owner": "BrNx01",
+          "repo": "karen"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "BrNx01",
+        "repo": "karen",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true,
+    "electron@33.4.11": true
+  }
+}

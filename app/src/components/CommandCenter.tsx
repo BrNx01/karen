@@ -1,4 +1,5 @@
 import type { DashboardData } from '../../../server/dashboard.js';
+import { Icon, type IconName } from '../icons.js';
 import type { SessionInfo } from '../../../server/sessions.js';
 import type { Key, Locale } from '../../../shared/i18n/index.js';
 import { useI18n } from '../i18n.js';
@@ -10,16 +11,16 @@ export type StageScreen = 'overview' | 'chat' | 'inbox' | 'memory' | 'map' | 'sk
 
 type Translate = (key: Key, vars?: Record<string, string | number>) => string;
 
-const NAV: { id: StageScreen; label: Key; icon: string; badge?: (data: DashboardData | null) => number | null }[] = [
-  { id: 'overview', label: 'nav.overview', icon: '▦' },
-  { id: 'chat', label: 'nav.chat', icon: '◍' },
-  { id: 'inbox', label: 'nav.inbox', icon: '✉', badge: (d) => d?.unreadInbox ?? null },
-  { id: 'memory', label: 'nav.memory', icon: '◈', badge: (d) => d?.memory.notes ?? null },
-  { id: 'map', label: 'nav.map', icon: '❖' },
-  { id: 'skills', label: 'nav.skills', icon: '✦' },
-  { id: 'growth', label: 'nav.growth', icon: '↗', badge: (d) => d?.pendingProposals ?? null },
-  { id: 'repos', label: 'nav.repos', icon: '▣' },
-  { id: 'settings', label: 'nav.settings', icon: '⚙' },
+const NAV: { id: StageScreen; label: Key; icon: IconName; badge?: (data: DashboardData | null) => number | null }[] = [
+  { id: 'overview', label: 'nav.overview', icon: 'nav.overview' },
+  { id: 'chat', label: 'nav.chat', icon: 'nav.chat' },
+  { id: 'inbox', label: 'nav.inbox', icon: 'nav.inbox', badge: (d) => d?.unreadInbox ?? null },
+  { id: 'memory', label: 'nav.memory', icon: 'nav.memory', badge: (d) => d?.memory.notes ?? null },
+  { id: 'map', label: 'nav.map', icon: 'nav.map' },
+  { id: 'skills', label: 'nav.skills', icon: 'nav.skills' },
+  { id: 'growth', label: 'nav.growth', icon: 'nav.growth', badge: (d) => d?.pendingProposals ?? null },
+  { id: 'repos', label: 'nav.repos', icon: 'nav.repos' },
+  { id: 'settings', label: 'nav.settings', icon: 'nav.settings' },
 ];
 
 const STATUS_TEXT: Record<DashboardData['status'], Key> = {
@@ -81,7 +82,7 @@ export function Sidebar(props: {
               className={props.screen === item.id ? 'active' : ''}
               onClick={() => props.onNavigate(item.id)}
             >
-              <span className="cc-nav-icon">{item.icon}</span>
+              <span className="cc-nav-icon"><Icon name={item.icon} size={18} /></span>
               <span className="cc-nav-label">{t(item.label)}</span>
               {badge !== null && badge !== undefined && badge > 0 && <span className="cc-nav-badge">{badge}</span>}
             </button>
@@ -143,28 +144,28 @@ export function CommandCenter(props: {
             </div>
           </li>
           <li>
-            <span className="cc-ico">🎙</span>
+            <span className="cc-ico"><Icon name="action.mic" size={18} /></span>
             <div>
               <b>{data ? t(VOICE_TEXT[data.voice.status]) : '—'}</b>
               <small>{t('dashboard.voice')}</small>
             </div>
           </li>
           <li onClick={() => props.onNavigate('chat')}>
-            <span className="cc-ico">◍</span>
+            <span className="cc-ico"><Icon name="nav.chat" size={18} /></span>
             <div>
               <b>{t('dashboard.agentRunningWithCount', { count: data?.activeAgents ?? 0 })}</b>
               <small>{t('dashboard.agents')}</small>
             </div>
           </li>
           <li>
-            <span className="cc-ico">✦</span>
+            <span className="cc-ico"><Icon name="nav.skills" size={18} /></span>
             <div>
               <b>{data?.provider.active ?? '—'}</b>
               <small>{data?.provider.model ?? t('settings.model')}</small>
             </div>
           </li>
           <li>
-            <span className="cc-ico">⚙</span>
+            <span className="cc-ico"><Icon name="nav.settings" size={18} /></span>
             <div>
               <b>{data ? uptime(data.system.uptimeSec, t) : '—'}</b>
               <small>{t('dashboard.uptimeLabel')}</small>

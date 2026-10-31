@@ -12,6 +12,7 @@ import { MemoryGrid } from './components/MemoryGrid.js';
 import { BrainMapView } from './components/BrainMap.js';
 import { Sidebar, CommandCenter, type StageScreen } from './components/CommandCenter.js';
 import { I18nProvider, useI18n } from './i18n.js';
+import { Icon } from './icons.js';
 import { localeTag, osLocaleTag } from './locale.js';
 import { resolveLocale, type Locale, type LocaleSetting } from '../../shared/i18n/index.js';
 import { startWakeWord, wakeWordSupported, isFatalWakeError, wakeErrorText } from './wake.js';
@@ -707,7 +708,7 @@ function AppBody(props: { locale: Locale; onLocaleChange: (locale: Locale) => vo
               onClick={() => void talk()}
               title={t('chat.mic')}
             >
-              🎙
+              <Icon name="action.mic" size={18} />
             </button>
             <input
               className="cc-talk-input"

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Icon } from '../icons.js';
 import { getJson, buildUrl } from '../api.js';
 import { useI18n } from '../i18n.js';
 import { localeTag } from '../locale.js';
@@ -137,7 +138,7 @@ export function GrowthScreen(props: { onMessage: (text: string) => void }) {
                 <ul className="map-detail-meta">
                   {proposal.checks.map((check) => (
                     <li key={check.name} className={check.ok ? '' : 'warn'}>
-                      {check.ok ? '✓' : '✗'} {check.name}: {check.detail}
+                      <Icon name={check.ok ? 'action.approve' : 'action.reject'} size={13} /> {check.name}: {check.detail}
                     </li>
                   ))}
                 </ul>

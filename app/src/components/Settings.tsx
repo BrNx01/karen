@@ -4,6 +4,7 @@ import type { PublicSettings } from '../../../server/settings.js';
 import type { VoiceInfo } from '../../../server/voice/index.js';
 import { listBrowserVoices, onVoicesReady, type BrowserVoice } from '../speech.js';
 import { useI18n } from '../i18n.js';
+import { Icon } from '../icons.js';
 import type { Locale, LocaleSetting } from '../../../shared/i18n/index.js';
 
 type ProviderCard = PublicSettings['providerList'][number];
@@ -144,7 +145,7 @@ export function SettingsScreen(props: {
             >
               <span className="provider-name">
                 {card.label}
-                {card.configured && <em className="ok"> ✓</em>}
+                {card.configured && <em className="ok"><Icon name="action.approve" size={13} /></em>}
               </span>
               <span className="provider-hint">
                 {card.local

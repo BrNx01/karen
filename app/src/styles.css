@@ -1,15 +1,20 @@
 :root {
   --bg: #08080a;
-  --panel: #121216;
+  --surface: #0e0e12;
+  --panel: #14141a;
   --panel-2: #17171b;
-  --line: #2a1216;
+  --raised: #1b1b22;
+  --line: #241016;
   --text: #ececef;
-  --muted: #9a9aa2;
+  --muted: #8f8f99;
+  --faint: #5a5a63;
   --accent: #e11d2e;
   --accent-soft: #ff5a66;
   --danger: #e11d2e;
   --ok: #5dd1a4;
   --warn: #ffc25c;
+  /* Charts and graph edges only; never a surface, never text. */
+  --data: #6ea8fe;
 }
 
 * { box-sizing: border-box; }

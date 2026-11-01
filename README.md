@@ -12,7 +12,7 @@
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-e11d2e"></a>
   <img alt="platform" src="https://img.shields.io/badge/platform-Windows-e11d2e">
   <img alt="providers" src="https://img.shields.io/badge/providers-18-e11d2e">
-  <img alt="tests" src="https://img.shields.io/badge/tests-861-e11d2e">
+  <img alt="tests" src="https://img.shields.io/badge/tests-867-e11d2e">
   <img alt="interface" src="https://img.shields.io/badge/interface-English%20%7C%20Türkçe-e11d2e">
 </p>
 
@@ -192,7 +192,7 @@ docs/            design records, plans, screenshots
 ## Development
 
 ```bash
-npm test               # 861 tests
+npm test               # 867 tests
 npx tsc -p tsconfig.json --noEmit
 npm run build          # server + interface
 npm run desktop        # run in Electron

@@ -15,9 +15,9 @@ describe('rail', () => {
     expect(railOrder('nope' as never)).toBe(-1);
   });
 
-  it('collapses below 900 px only', () => {
-    expect(shouldCollapse(899)).toBe(true);
-    expect(shouldCollapse(900)).toBe(false);
+  it('collapses below 1080 px only', () => {
+    expect(shouldCollapse(1079)).toBe(true);
+    expect(shouldCollapse(1080)).toBe(false);
   });
 });
 

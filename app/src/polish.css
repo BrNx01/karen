@@ -1,17 +1,8 @@
-/* --- v3 polish: modern, soft glass surfaces --- */
+/* --- v3 polish: soft glass surfaces --- */
+/* The palette lives in styles.css :root and nowhere else. This file only adds tokens
+   it owns, so a later import cannot quietly recolour the whole interface. */
 :root {
-  --bg: #08080a;
-  --panel: rgba(12, 12, 15, 0.72);
-  --panel-2: rgba(18, 18, 22, 0.86);
-  --line: rgba(255, 90, 102, 0.14);
   --line-strong: rgba(255, 90, 102, 0.28);
-  --text: #ececef;
-  --muted: #ff5a66;
-  --accent: #ff5a66;
-  --accent-2: #e11d2e;
-  --danger: #ffb3b9;
-  --ok: #e11d2e;
-  --warn: #ffc25c;
   --radius: 16px;
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
 }

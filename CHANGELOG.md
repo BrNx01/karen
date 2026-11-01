@@ -5,35 +5,37 @@ This file follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and t
 
 ## [1.2.0] — 2026-11-01
 
-The command center becomes a cockpit: one screen, three live cards, and a layout that
-gets out of the way.
+The dashboard becomes a cockpit: an empty stage with the core, and a dock you open on
+demand.
 
 ### Added
 
-- **Cockpit layout** — core / memory / system cards on the left, the core in the middle,
-  the conversation on the right. Replaces the four-quadrant dashboard.
-- **Cards that answer back** — when KAREN writes memory, changes state or runs a tool,
-  the card that explains it steps forward for four seconds and the others fade back.
-- **Collapsible everything** — an edge handle per panel, plus *clear the screen* (zen),
-  which hides both and leaves the core and composer alone. The layout is stored and
-  restored on the next launch.
-- **Five core actions** — talk, consolidate now, inbox, growth, clear the screen — with
-  live badges for unread notes and pending proposals.
-- **Real gauges** — CPU, RAM and heap dials plus turns/tools/conflicts/approvals, all from
-  the process, none invented.
+- **Empty stage** — the core sits alone in the middle: the mark, a tick bezel, two
+  counter-rotating rings, one status line, two actions.
+- **A dock, not a dashboard** — five small icons on the right edge. Each grows under the
+  pointer and shows its name; clicking opens its panel beside the core. Clicking again,
+  or `Esc`, closes it. Conversation, memory, system, inbox and agents are panels now,
+  not permanent columns.
+- **Clear screen** hides the dock as well, leaving the orb and the composer.
+- **The screen reacts when it matters** — a reply in flight or a waiting approval opens
+  the conversation panel on its own, once, and never over an open panel.
+- **Panels with real content** — memory bars and counts, CPU/RAM/heap dials with the live
+  feed, unread inbox, the session list, and the conversation with approval cards.
 
 ### Changed
 
-- The dashboard component is gone; the cockpit is the overview now. Memory, Inbox, Map,
-  Skills, Growth, Repos and Settings keep their own screens.
-- Panel toggles are always visible at 55 % opacity: a control hidden until hover is a
-  control nobody finds.
+- Removed the four-quadrant dashboard grid, the always-on side cards and their focus
+  animation. The room stays empty until it is asked for.
+- One palette, one place: `polish.css` no longer redefines `--muted`, `--accent` and
+  friends, which had turned every muted label red.
+- Chat has its own stylesheet: bubbles with a spine, a proper empty state, and approval
+  cards that read like part of the conversation.
+- The shell collapses its own context panel below 1080 px, so the cockpit keeps its width.
 
 ### Fixed
 
-- Collapsing a panel used to remove the only button that could reopen it; a collapsed
-  panel now leaves an edge handle.
-- The first event on load no longer steals focus from a card: only new events do.
+- A truncated `electron/updater.cjs` (from 1.0.0) that made the packaged app fail to
+  load, and the missing native-module rebuild before packaging.
 
 ## [1.1.0] — 2026-11-01
 

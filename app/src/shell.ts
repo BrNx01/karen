@@ -21,7 +21,9 @@ export function railOrder(screen: StageScreen): number {
   return RAIL.findIndex((item) => item.id === screen);
 }
 
-/** Below this width the rail becomes a bottom bar and the context panel a drawer. */
+/** Below this width the rail becomes a bottom bar and the shell's context panel a drawer.
+ *  The cockpit needs ~1000 px before its three columns stop being usable, so the shell
+ *  gives up its own side panel first. */
 export function shouldCollapse(width: number): boolean {
-  return width < 900;
+  return width < 1080;
 }

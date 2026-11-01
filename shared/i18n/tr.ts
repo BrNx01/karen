@@ -421,9 +421,10 @@ export const tr: Dictionary = {
   'cockpit.conversation': 'Konuşma',
   'cockpit.collapseLeft': 'Sol paneli gizle',
   'cockpit.collapseRight': 'Konuşma panelini gizle',
-  'cockpit.zen': 'Ekranı sadeleştir',
+  'cockpit.zen': 'Sadeleştir',
   'cockpit.exitZen': 'Panelleri göster',
   'dashboard.stat.conflicts': 'Çelişki',
   'cockpit.showLeft': 'Sol paneli göster',
   'cockpit.showRight': 'Konuşma panelini göster',
+  'cockpit.dock': 'Paneller',
 };

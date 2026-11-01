@@ -437,11 +437,12 @@ export const en = {
   'cockpit.conversation': 'Conversation',
   'cockpit.collapseLeft': 'Hide the left panel',
   'cockpit.collapseRight': 'Hide the conversation panel',
-  'cockpit.zen': 'Clear the screen',
+  'cockpit.zen': 'Clear screen',
   'cockpit.exitZen': 'Show panels',
   'dashboard.stat.conflicts': 'Conflict',
   'cockpit.showLeft': 'Show the left panel',
   'cockpit.showRight': 'Show the conversation panel',
+  'cockpit.dock': 'Panels',
 } as const;
 
 export type Dictionary = Record<keyof typeof en, string>;

@@ -1,401 +1,103 @@
-/* The cockpit: three live cards, the core, the conversation. All of it collapses. */
+/* The cockpit: an empty stage, the core, and a quiet dock. Nothing else.
+   Panels open only when asked for, so the screen stays a room, not a dashboard. */
 
 .cockpit {
+  position: relative;
   display: grid;
-  grid-template-columns: 268px minmax(0, 1fr) 340px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
   height: 100%;
   min-height: 0;
-  padding: 12px;
-  position: relative;
+  overflow: hidden;
+  background-image:
+    linear-gradient(rgba(225, 29, 46, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(225, 29, 46, 0.028) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: -1px -1px;
 }
 
-/* A collapsed side leaves a slim strip, never a gap. */
-.cockpit-left.hidden,
-.cockpit-right.hidden {
-  display: none;
-}
-
-.cockpit:has(.cockpit-left.hidden) {
-  grid-template-columns: minmax(0, 1fr) 340px;
-}
-
-.cockpit:has(.cockpit-right.hidden) {
-  grid-template-columns: 268px minmax(0, 1fr);
-}
-
-.cockpit:has(.cockpit-left.hidden):has(.cockpit-right.hidden) {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-/* ---------- the panels ---------- */
-
-.cockpit-left,
-.cockpit-right {
-  position: relative;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.cockpit-left {
-  padding-right: 6px;
-  justify-content: flex-start;
-}
-
-.panel-toggle {
-  position: absolute;
-  /* Mid-edge, not top: the panel header owns the top and the two must not collide. */
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--faint);
-  cursor: pointer;
-  /* Always visible but quiet: a hidden control is a control nobody finds. */
-  opacity: 0.55;
-  transition: opacity 160ms ease-out, color 160ms ease-out;
-  z-index: 3;
-}
-
-.cockpit-left .panel-toggle {
-  right: -10px;
-}
-
-.cockpit-right .panel-toggle {
-  left: -10px;
-}
-
-.cockpit:hover .panel-toggle,
-.panel-toggle:hover,
-.panel-toggle:focus-visible {
-  opacity: 1;
-}
-
-.panel-toggle:hover {
-  color: var(--text);
-  border-color: var(--accent);
-}
-
-/* A collapsed panel leaves this handle behind: without it there is no way back. */
-.panel-handle {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 54px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--faint);
-  cursor: pointer;
-  z-index: 4;
-  transition: color 160ms ease-out, border-color 160ms ease-out;
-}
-
-.panel-handle.left {
-  left: 2px;
-}
-
-.panel-handle.right {
-  right: 2px;
-}
-
-.panel-handle.right .icon {
-  transform: rotate(180deg);
-}
-
-.panel-handle:hover {
-  color: var(--text);
-  border-color: var(--accent);
-}
-
-/* ---------- cards ---------- */
-
-.cockpit-card {
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel);
-  padding: 12px 13px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 0;
-  flex: 0 0 auto;
-  transition: opacity 220ms ease-out, transform 220ms ease-out, border-color 220ms ease-out;
-}
-
-/* The focused card grows and the others step back: this is the "menu breathes" bit.
-   Only the short system card has spare room, so it is the one that visibly moves. */
-.cockpit-card.focused {
-  flex: 1 1 auto;
-  border-color: var(--accent);
-  opacity: 1;
-}
-
-.cockpit-card.dimmed {
-  opacity: 0.45;
-  transform: scale(0.985);
-}
-
-.cockpit-card header,
-.cockpit-conversation-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.cockpit-card h3,
-.cockpit-conversation-head h3 {
-  margin: 0;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.card-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  border: 0;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  color: var(--faint);
-}
-
-.card-link:hover h3,
-.card-link:hover {
-  color: var(--accent-soft);
-}
-
-.pill {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.pill.optimal {
-  color: var(--ok);
-  border-color: rgba(93, 209, 164, 0.35);
-}
-
-.pill.busy {
-  color: var(--accent-soft);
-  border-color: rgba(255, 90, 102, 0.4);
-}
-
-.pill.attention {
-  color: var(--warn);
-  border-color: rgba(255, 194, 92, 0.35);
-}
-
-.cockpit-facts {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 0;
-}
-
-.cockpit-facts.row {
-  flex-direction: row;
-  gap: 6px;
-  margin-top: auto;
-}
-
-.cockpit-facts li {
-  display: grid;
-  gap: 1px;
+/* The shell's body is a flex row; the cockpit has to claim the rest of it. */
+.cc-body > .cockpit {
+  flex: 1;
   min-width: 0;
 }
 
-.cockpit-facts.row li {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--bg);
+.cockpit.zen {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.cockpit-facts b {
-  font-size: 13px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cockpit-facts small {
-  font-size: 10px;
-  color: var(--faint);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ---------- bars and dials ---------- */
-
-.cockpit-bars {
-  display: grid;
-  gap: 5px;
-  min-height: 0;
-}
-
-.cockpit-bar {
-  display: grid;
-  grid-template-columns: 60px minmax(0, 1fr) 26px;
-  align-items: center;
-  gap: 7px;
-  font-size: 10px;
-  color: var(--muted);
-}
-
-.cockpit-bar > div {
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-}
-
-.cockpit-bar i {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  opacity: 0.85;
-}
-
-.cockpit-bar b {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 9.5px;
-  color: var(--faint);
-  text-align: right;
-}
-
-.cockpit-gauges {
-  display: flex;
-  justify-content: space-around;
-  gap: 6px;
-}
-
-.cockpit-gauge {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-}
-
-.cockpit-gauge .dial {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  position: relative;
-}
-
-.cockpit-gauge .dial::after {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  border-radius: 50%;
-  background: var(--panel);
-}
-
-.cockpit-gauge .dial span {
-  position: relative;
-  z-index: 1;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.cockpit-gauge small {
-  font-size: 8.5px;
-  letter-spacing: 0.06em;
-  color: var(--faint);
-}
-
-.cockpit-meta {
-  margin: 0;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 9.5px;
-  color: var(--faint);
-}
-
-/* ---------- center ---------- */
+/* ---------- stage ---------- */
 
 .cockpit-center {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  min-height: 0;
+  gap: 16px;
   min-width: 0;
-  padding: 8px 0;
+  min-height: 0;
+  padding: 20px 24px;
 }
 
 .cockpit-core {
   position: relative;
-  width: min(240px, 46vh);
+  width: min(360px, 46vh);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
 }
 
 .cockpit-core img {
-  width: 74%;
+  width: 62%;
   height: auto;
   position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 0 26px rgba(225, 29, 46, 0.35));
+  z-index: 2;
+  filter: drop-shadow(0 0 40px rgba(225, 29, 46, 0.45));
 }
 
 .cockpit-core .ring {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(225, 29, 46, 0.18);
+  border: 1px solid rgba(225, 29, 46, 0.14);
 }
 
 .cockpit-core .r1 {
   inset: 0;
-  animation: cockpit-spin 26s linear infinite;
+  border-color: rgba(225, 29, 46, 0.22);
+  animation: cockpit-spin 32s linear infinite;
 }
 
+/* HUD bezel: 36 ticks around a thin band. */
 .cockpit-core .r2 {
-  inset: 9%;
-  border-color: rgba(255, 90, 102, 0.14);
-  animation: cockpit-spin 19s linear infinite reverse;
+  inset: 6%;
+  border: 0;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 90, 102, 0.42) 0deg 1deg,
+    transparent 1deg 10deg
+  );
+  mask: radial-gradient(circle, transparent 0 47%, #000 48% 51%, transparent 52% 100%);
+  -webkit-mask: radial-gradient(circle, transparent 0 47%, #000 48% 51%, transparent 52% 100%);
+  animation: cockpit-spin 60s linear infinite reverse;
 }
 
 .cockpit-core .r3 {
-  inset: 18%;
+  inset: 19%;
   border-style: dashed;
-  border-color: rgba(225, 29, 46, 0.22);
-  animation: cockpit-spin 34s linear infinite;
+  border-color: rgba(255, 90, 102, 0.2);
+  animation: cockpit-spin 40s linear infinite;
 }
 
 .cockpit-core.busy .ring,
 .cockpit-core.listening .ring {
-  border-color: rgba(255, 90, 102, 0.42);
-  animation-duration: 9s;
+  border-color: rgba(255, 90, 102, 0.45);
+  animation-duration: 8s;
+}
+
+.cockpit-core.busy img,
+.cockpit-core.listening img {
+  filter: drop-shadow(0 0 54px rgba(255, 90, 102, 0.7));
 }
 
 @keyframes cockpit-spin {
@@ -410,45 +112,58 @@
   }
 }
 
-.cockpit-tagline {
-  margin: 0;
-  font-size: 11px;
-  letter-spacing: 0.22em;
+.cockpit-statusline {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
 }
 
+.cockpit-statusline .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 8px currentColor;
+}
+
+.cockpit-statusline .sep {
+  opacity: 0.35;
+}
+
 .cockpit-actions {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 8px;
 }
 
 .cockpit-action {
-  position: relative;
-  width: 64px;
-  height: 64px;
   display: grid;
-  place-items: center;
-  gap: 2px;
+  justify-items: center;
+  gap: 3px;
+  min-width: 74px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--panel);
+  border-radius: 9px;
+  background: rgba(12, 12, 16, 0.7);
   color: var(--muted);
   cursor: pointer;
-  transition: border-color 160ms ease-out, color 160ms ease-out, background 160ms ease-out;
+  transition: color 150ms ease-out, border-color 150ms ease-out, background 150ms ease-out;
 }
 
 .cockpit-action small {
-  font-size: 8.5px;
-  letter-spacing: 0.04em;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 7.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .cockpit-action:hover {
   color: var(--text);
   border-color: var(--accent);
-  background: var(--raised);
 }
 
 .cockpit-action.live {
@@ -458,139 +173,557 @@
 }
 
 .cockpit-action:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
 }
 
-.cockpit-action .badge {
+.cockpit-hint {
+  margin: 0;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+  opacity: 0.7;
+}
+
+/* ---------- the dock ---------- */
+
+.cockpit-dock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 10px;
+  border-left: 1px solid var(--line);
+  background: rgba(10, 10, 13, 0.6);
+  min-height: 0;
+}
+
+.dock-item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  color: var(--faint);
+  cursor: pointer;
+  /* The icon grows under the pointer: the dock stays small, the target does not. */
+  transition: color 160ms ease-out, border-color 160ms ease-out, background 160ms ease-out;
+}
+
+.dock-icon {
+  display: grid;
+  place-items: center;
+  transition: transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dock-item:hover .dock-icon,
+.dock-item:focus-visible .dock-icon {
+  transform: scale(1.35);
+}
+
+.dock-item:hover,
+.dock-item:focus-visible {
+  color: var(--text);
+  border-color: var(--line);
+  background: var(--raised);
+  outline: none;
+}
+
+.dock-item.active {
+  color: #fff;
+  border-color: var(--accent);
+  background: rgba(225, 29, 46, 0.14);
+}
+
+.dock-item.active::after {
+  content: '';
   position: absolute;
-  top: 4px;
-  right: 4px;
-  min-width: 15px;
-  height: 15px;
-  padding: 0 4px;
+  right: -11px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* The label is a tooltip that appears beside the icon, never a second column. */
+.dock-label {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+  z-index: 30;
+}
+
+.dock-item:hover .dock-label,
+.dock-item:focus-visible .dock-label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.dock-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
   border-radius: 999px;
   background: var(--accent);
   color: #fff;
-  font-size: 9.5px;
-  line-height: 15px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 8.5px;
+  line-height: 14px;
   text-align: center;
 }
 
-.cockpit-strip {
+.dock-sep {
+  width: 18px;
+  height: 1px;
+  margin: 6px 0;
+  background: var(--line);
+}
+
+/* ---------- the panel ---------- */
+
+.cockpit-panel {
+  position: absolute;
+  top: 0;
+  right: 66px;
+  bottom: 0;
+  width: min(420px, 46vw);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border-left: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(14, 14, 18, 0.97), rgba(8, 8, 10, 0.98));
+  backdrop-filter: blur(6px);
+  animation: cockpit-slide 180ms ease-out;
+  z-index: 20;
+  outline: none;
+}
+
+@keyframes cockpit-slide {
+  from {
+    transform: translateX(12px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cockpit-panel {
+    animation: none;
+  }
+}
+
+.cockpit-panel header {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
 }
 
-.cockpit-stat {
-  min-width: 70px;
-  padding: 7px 12px;
+.cockpit-panel h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.cockpit-panel h2::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.panel-close {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  text-align: center;
+  border-radius: 6px;
+  background: none;
+  color: var(--faint);
+  cursor: pointer;
 }
 
-.cockpit-stat b {
+.panel-close:hover {
+  color: #fff;
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.cockpit-panel-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* The chat inside a panel drops its own page padding. */
+.cockpit-panel .chat {
+  padding: 0;
+  max-width: none;
+  gap: 8px;
+}
+
+.cockpit-panel .chat-empty {
+  padding: 24px 8px;
+}
+
+.cockpit-panel .chat-empty img {
+  width: 44px;
+  height: 44px;
+}
+
+.cockpit-panel .chat-empty p {
+  font-size: 12.5px;
+}
+
+.cockpit-panel .bubble {
+  font-size: 12.5px;
+  padding: 8px 11px;
+}
+
+.cockpit-panel .approval {
+  margin: 0;
+}
+
+/* ---------- panel content ---------- */
+
+.dock-bars {
+  display: grid;
+  gap: 8px;
+}
+
+.dock-bar {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 26px;
+  align-items: center;
+  gap: 8px;
+}
+
+.dock-bar > span {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-bar > div {
+  height: 5px;
+  border-radius: 1px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 4px, transparent 4px 6px);
+  overflow: hidden;
+}
+
+.dock-bar i {
   display: block;
-  font-size: 16px;
+  height: 100%;
+  box-shadow: 0 0 10px rgba(225, 29, 46, 0.5);
+}
+
+.dock-bar b {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.dock-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dock-facts.four {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dock-facts li {
+  display: grid;
+  gap: 1px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dock-facts b {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 
-.cockpit-stat small {
+.dock-facts small {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.dock-gauges {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.dock-gauge {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.dock-gauge .dial {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.dock-gauge .dial::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #0b0b0e;
+}
+
+.dock-gauge .dial span {
+  position: relative;
+  z-index: 1;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11.5px;
+}
+
+.dock-gauge small {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.dock-feed {
+  display: grid;
+  gap: 5px;
+}
+
+.dock-feed h3 {
+  margin: 0 0 2px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.dock-feed ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.dock-feed li {
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.dock-feed li b {
+  font-weight: 400;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.dock-feed .d {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+
+.dock-feed li.ok .d { background: var(--ok); }
+.dock-feed li.warn .d { background: var(--warn); }
+.dock-feed li.info .d { background: var(--accent-soft); }
+.dock-feed .none { color: var(--faint); font-size: 11px; }
+
+.dock-note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.dock-agents {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.dock-agents li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dock-agents b {
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-agents small {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 8.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--faint);
 }
 
-.cockpit-hint {
-  margin: 0;
-  font-size: 10.5px;
+.dock-agents .none {
+  border: 0;
+  background: none;
   color: var(--faint);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 11.5px;
 }
 
-/* ---------- conversation ---------- */
-
-.cockpit-right {
+.dock-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: auto;
+  padding: 8px 11px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel);
-  padding: 12px;
-  gap: 10px;
-  overflow: hidden;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
-.cockpit-conversation {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 2px;
-}
-
-.cockpit-approvals {
-  display: grid;
-  gap: 8px;
-  max-height: 40%;
-  overflow-y: auto;
+.dock-link:hover {
+  color: #fff;
+  border-color: var(--accent);
+  background: rgba(225, 29, 46, 0.12);
 }
 
 /* ---------- zen ---------- */
 
-.cockpit.zen .cockpit-center {
-  gap: 20px;
-}
-
-.cockpit.zen .cockpit-core {
-  width: min(320px, 52vh);
-}
-
 .zen-exit {
   position: absolute;
   right: 18px;
-  bottom: 10px;
+  bottom: 14px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 11px;
+  padding: 6px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface);
   color: var(--muted);
-  font-size: 10.5px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
+  z-index: 25;
 }
 
 .zen-exit:hover {
-  color: var(--text);
+  color: #fff;
   border-color: var(--accent);
 }
 
-/* ---------- narrow ---------- */
+/* ---------- small screens: the panel takes the width, the dock shrinks ---------- */
 
-@media (max-width: 1180px) {
-  .cockpit {
-    grid-template-columns: 230px minmax(0, 1fr) 300px;
+@media (max-width: 1040px) {
+  .cockpit-panel {
+    right: 56px;
+    width: auto;
+    left: 0;
   }
 }
 
-@media (max-width: 980px) {
-  .cockpit,
-  .cockpit:has(.cockpit-left.hidden),
-  .cockpit:has(.cockpit-right.hidden) {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-    overflow-y: auto;
+@media (max-width: 760px) {
+  .cockpit-core {
+    width: min(220px, 62vw);
   }
-  .cockpit-left,
-  .cockpit-right {
-    display: none;
+  .cockpit-dock {
+    padding: 8px 6px;
   }
-  .cockpit-center {
-    min-height: 320px;
+  .dock-item {
+    width: 38px;
+    height: 38px;
+  }
+  .cockpit-panel {
+    right: 50px;
+  }
+  .cockpit-panel header {
+    padding: 10px 12px;
   }
 }

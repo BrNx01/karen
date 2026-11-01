@@ -18,10 +18,11 @@ const height = Number(process.env.KAREN_CAPTURE_HEIGHT ?? 900);if (!baseUrl) {
   process.exit(2);
 }
 
-/** Screens in the order the README shows them. */
+/** Screens in the order the README shows them. `panel` opens a dock panel first. */
 const SHOTS = [
-  { name: 'command-center', nav: 'overview' },
-  { name: 'chat', nav: 'chat' },
+  { name: 'cockpit', nav: 'overview' },
+  { name: 'cockpit-conversation', nav: 'overview', panel: 'conversation' },
+  { name: 'cockpit-system', nav: 'overview', panel: 'system' },
   { name: 'memory', nav: 'memory' },
   { name: 'brain-map', nav: 'map' },
   { name: 'settings', nav: 'settings' },
@@ -30,11 +31,11 @@ const SHOTS = [
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const log = (line) => writeFileSync(join(outDir, '_capture.log'), `${line}\n`, { flag: 'a' });
 
-writeFileSync(join(outDir, '_capture.log'), `boot argv=${JSON.stringify(process.argv)}\n`);
+// The output directory may not exist yet: create it before the first log line.
+mkdirSync(outDir, { recursive: true });
 app.disableHardwareAcceleration();
 
 app.whenReady().then(async () => {
-  mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, '_capture.log'), `start ${baseUrl}\n`);
 
   const win = new BrowserWindow({
@@ -99,10 +100,36 @@ app.whenReady().then(async () => {
     `, true);
     if (!clicked) throw new Error(`no rail item for ${shot.nav}`);
     await wait(900);
+
+    // A dock panel is opened deliberately: the README shows both the empty stage
+    // and the stage with a panel out, because that difference is the point.
+    if (shot.panel) {
+      await win.webContents.executeJavaScript(`
+        (() => {
+          const item = document.querySelector('[data-panel="${shot.panel}"]');
+          if (!item) return false;
+          item.click();
+          return true;
+        })()
+      `, true);
+      await wait(700);
+    }
+
     const image = await win.webContents.capturePage();
     const file = join(outDir, `${shot.name}.png`);
     writeFileSync(file, image.toPNG());
     log(`${file} ${image.getSize().width}x${image.getSize().height}`);
+
+    if (shot.panel) {
+      // Close it again so the next shot starts from the empty stage.
+      await win.webContents.executeJavaScript(`
+        (() => {
+          document.querySelector('.panel-close')?.click();
+          return true;
+        })()
+      `, true);
+      await wait(300);
+    }
   }
 
   win.destroy();

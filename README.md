@@ -12,7 +12,7 @@
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-e11d2e"></a>
   <img alt="platform" src="https://img.shields.io/badge/platform-Windows-e11d2e">
   <img alt="providers" src="https://img.shields.io/badge/providers-18-e11d2e">
-  <img alt="tests" src="https://img.shields.io/badge/tests-880-e11d2e">
+  <img alt="tests" src="https://img.shields.io/badge/tests-878-e11d2e">
   <img alt="interface" src="https://img.shields.io/badge/interface-English%20%7C%20Türkçe-e11d2e">
 </p>
 
@@ -48,27 +48,33 @@ Or install the Windows build and skip the terminal:
 Real captures from the 1.2.0 build, taken from a seeded demo profile — no personal
 memory, paths or keys appear in any of them.
 
-| Cockpit | Chat |
+| Cockpit | A panel, opened |
 | :---: | :---: |
-| [![Cockpit: three live cards, the core at the centre, the conversation on the right](docs/assets/showcase/command-center.png)](docs/assets/showcase/command-center.png) | [![Chat with the contextual panel showing approvals and agents](docs/assets/showcase/chat.png)](docs/assets/showcase/chat.png) |
-| **Memory** | **Brain map** |
-| [![Memory notes by layer, with strength and trauma marks](docs/assets/showcase/memory.png)](docs/assets/showcase/memory.png) | [![Brain map: continents, cities and streets on one canvas](docs/assets/showcase/brain-map.png)](docs/assets/showcase/brain-map.png) |
+| [![Cockpit: the core alone, with a quiet dock of icons on the right](docs/assets/showcase/cockpit.png)](docs/assets/showcase/cockpit.png) | [![The conversation panel open beside the core](docs/assets/showcase/cockpit-conversation.png)](docs/assets/showcase/cockpit-conversation.png) |
+| **System panel** | **Memory** |
+| [![System panel: CPU, RAM, heap and the live feed](docs/assets/showcase/cockpit-system.png)](docs/assets/showcase/cockpit-system.png) | [![Memory notes by layer, with strength and trauma marks](docs/assets/showcase/memory.png)](docs/assets/showcase/memory.png) |
 
-[![Settings: one address, a Detect button, sections for voice, computer, memory, autonomy](docs/assets/showcase/settings.png)](docs/assets/showcase/settings.png)
+| Brain map | Settings |
+| :---: | :---: |
+| [![Brain map: continents, cities and streets on one canvas](docs/assets/showcase/brain-map.png)](docs/assets/showcase/brain-map.png) | [![Settings: one address, a Detect button, sections for voice, computer, memory, autonomy](docs/assets/showcase/settings.png)](docs/assets/showcase/settings.png) |
 
 ## The cockpit
 
-One screen, and all of it gets out of the way:
+One screen, and almost nothing on it:
 
-- **Three live cards** — the core's inner state, memory by layer, and real CPU/RAM/heap
-  gauges. When KAREN does something, the card that explains it steps forward for four
-  seconds and the others fade back.
-- **The core** in the middle: the mark, three counter-rotating rings, and five actions —
-  talk, consolidate now, inbox, growth, and *clear the screen*.
-- **The conversation** on the right, with approval cards where they belong.
-- **Collapse anything**: each panel has an edge handle, and *clear the screen* hides
-  both, leaving only the core and the composer. The layout is remembered between
-  launches. Nothing is a still picture.
+- **The core** in the middle — the mark, a tick bezel, two counter-rotating rings, the
+  status line, and two actions: talk, and consolidate now.
+- **A quiet dock** on the right: five small icons. An icon grows under the pointer and
+  shows its name; clicking opens that panel beside the core. Click it again, or press
+  `Esc`, and the panel is gone.
+- **Nothing permanent.** Conversation, memory, system, inbox and agents are panels, not
+  columns. The screen stays empty until you ask for something.
+- **Clear screen** hides the dock too, leaving only the orb and the composer.
+- **It comes to you when it matters**: a reply in flight or an approval waiting opens the
+  conversation panel on its own.
+
+Screens that need room — Memory, Brain Map, Skills, Growth, Repos, Settings — stay whole
+pages on the rail.
 
 ## Download and use
 
@@ -206,7 +212,7 @@ docs/            design records, plans, screenshots
 ## Development
 
 ```bash
-npm test               # 880 tests
+npm test               # 878 tests
 npx tsc -p tsconfig.json --noEmit
 npm run build          # server + interface
 npm run desktop        # run in Electron

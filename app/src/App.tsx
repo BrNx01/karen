@@ -32,6 +32,7 @@ import './command.css';
 import './shell.css';
 import './settings.css';
 import './cockpit.css';
+import './chat.css';
 
 type NoteView = Note & { strength?: number };
 type SettingsValue = {

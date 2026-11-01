@@ -6,7 +6,10 @@ export function Chat(props: { messages: Message[]; streaming: boolean }) {
   return (
     <div className="chat">
       {props.messages.length === 0 && (
-        <p className="empty">{t('chat.ready')}</p>
+        <div className="chat-empty">
+          <img src="/karen-mark-round.svg" alt="" width={64} height={64} />
+          <p>{t('chat.ready')}</p>
+        </div>
       )}
       {props.messages.map((message) => (
         <div key={message.id} className={`bubble ${message.role}`}>

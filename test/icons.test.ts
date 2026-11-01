@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { PATHS } from '../app/src/icons.js';
+import { PATHS } from '../app/src/icon-paths.js';
 
 const NAMES = [
   'nav.overview', 'nav.chat', 'nav.inbox', 'nav.memory', 'nav.map', 'nav.skills', 'nav.growth', 'nav.repos', 'nav.settings',

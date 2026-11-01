@@ -175,6 +175,17 @@ export const PROVIDERS: ProviderSpec[] = [
     hint: 'with web search',
   },
   {
+    id: 'evren',
+    label: 'EVREN (SSB)',
+    kind: 'openai',
+    baseUrl: 'https://evren-llmapi.ssyz.org.tr/v1',
+    apiKeyEnv: 'EVREN_API_KEY',
+    requiresKey: true,
+    local: false,
+    hint: 'SSB · OpenAI-compatible',
+    extra: ['baseUrl'],
+  },
+  {
     id: 'azure-openai',
     label: 'Azure OpenAI',
     kind: 'openai',

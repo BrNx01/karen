@@ -1,6 +1,6 @@
 import type { Key } from '../../shared/i18n/index.js';
-import type { IconName } from './icons.js';
-import type { StageScreen } from './components/CommandCenter.js';
+import type { IconName } from './icon-paths.js';
+import type { StageScreen } from './screens.js';
 
 export type RailItem = { id: StageScreen; labelKey: Key; icon: IconName };
 

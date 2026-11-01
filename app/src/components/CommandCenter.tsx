@@ -7,7 +7,8 @@ import { localeTag } from '../locale.js';
 
 import { StateStrip } from './StateStrip.js';
 
-export type StageScreen = 'overview' | 'chat' | 'inbox' | 'memory' | 'map' | 'skills' | 'repos' | 'growth' | 'settings';
+export type { StageScreen } from '../screens.js';
+import type { StageScreen } from '../screens.js';
 
 type Translate = (key: Key, vars?: Record<string, string | number>) => string;
 

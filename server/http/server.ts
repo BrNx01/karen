@@ -13,6 +13,7 @@ import type { StateVector } from '../brain/state.js';
 import type { DashboardData } from '../dashboard.js';
 import type { InboxItem } from '../autonomy/inbox.js';
 import { errorBody, requestLocale } from './locale.js';
+import { probeProvider } from '../engine/providers/probe.js';
 import type { Locale } from '../../shared/i18n/index.js';
 import type { VoiceInfo } from '../voice/index.js';
 import type { PublicSettings, Settings } from '../settings.js';
@@ -395,6 +396,19 @@ export function createKarenServer(opts: KarenServerOptions): KarenServer {
         }
         const result = await opts.probeProvider();
         sendJson(res, result.ok ? 200 : 503, result);
+        return;
+      }
+      if (req.method === 'POST' && parts[2] === 'probe') {
+        // One address, one key: detects the protocol and lists what that key can use.
+        const body = await readBody(req);
+        const address = typeof body['address'] === 'string' ? body['address'] : '';
+        const key = typeof body['key'] === 'string' ? body['key'] : '';
+        if (address.trim() === '') {
+          sendJson(res, 400, { error: 'address required' });
+          return;
+        }
+        const result = await probeProvider({ address, key });
+        sendJson(res, result.ok ? 200 : 502, result);
         return;
       }
       if (req.method === 'GET' && parts.length === 2) {

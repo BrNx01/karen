@@ -29,6 +29,7 @@ import './styles.css';
 import './polish.css';
 import './command.css';
 import './shell.css';
+import './settings.css';
 
 type NoteView = Note & { strength?: number };
 type SettingsValue = {
@@ -757,7 +758,6 @@ function AppBody(props: { locale: Locale; onLocaleChange: (locale: Locale) => vo
               )}
               {screen === 'settings' && (
                 <SettingsScreen
-                  voice={voice}
                   onSaved={(message) => {
                     dispatch({ type: 'error', message: null });
                     void (async () => {

@@ -1,444 +1,322 @@
-import { useEffect, useState } from 'react';
-import { getJson, patchJson, postJson, buildUrl } from '../api.js';
-import type { PublicSettings } from '../../../server/settings.js';
-import type { VoiceInfo } from '../../../server/voice/index.js';
-import { listBrowserVoices, onVoicesReady, type BrowserVoice } from '../speech.js';
+import { useEffect, useState, type JSX } from 'react';
+import { buildUrl, getJson, patchJson, postJson } from '../api.js';
+import type { PublicSettings, Settings } from '../../../server/settings.js';
 import { useI18n } from '../i18n.js';
 import { Icon } from '../icons.js';
-import type { Locale, LocaleSetting } from '../../../shared/i18n/index.js';
+import { SECTIONS, splitKey, type SettingsField, type SettingsKey } from '../settings-model.js';
+import type { Key, Locale } from '../../../shared/i18n/index.js';
 
-type ProviderCard = PublicSettings['providerList'][number];
+type ProbeResponse =
+  | { ok: true; kind: string; providerId: string; address: string; models: { id: string; context?: number }[] }
+  | { ok: false; error: string };
 
-type SettingsView = PublicSettings & {
-  providerInfo: { label: string; active: string; model: string; fellBack?: boolean; requested?: string };
-};
+const PROVIDER_LABEL: Record<string, string> = { evren: 'EVREN (SSB)' };
 
+/**
+ * The settings screen: a section list on the left, the active section's cards on the
+ * right. Every control writes through PATCH /api/settings; the Model section can also
+ * ask an endpoint what it serves and then pick from that list.
+ */
 export function SettingsScreen(props: {
-  voice: VoiceInfo | null;
   onSaved: (message: string) => void;
   onVoiceChanged: () => void;
   locale: Locale;
   onLocaleChange: (locale: Locale) => void;
-}) {
+}): JSX.Element {
   const { t } = useI18n();
-  const [data, setData] = useState<SettingsView | null>(null);
-  const [keyInput, setKeyInput] = useState('');
+  const [settings, setSettings] = useState<PublicSettings | null>(null);
+  const [section, setSection] = useState(SECTIONS[0]!.id);
   const [saving, setSaving] = useState(false);
-  const [voices, setVoices] = useState<BrowserVoice[]>(listBrowserVoices());
-  const [probe, setProbe] = useState<{ ok: boolean; label?: string; ms?: number; reason?: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => onVoicesReady(setVoices), []);
+  // Model section working state.
+  const [address, setAddress] = useState('');
+  const [key, setKey] = useState('');
+  const [models, setModels] = useState<{ id: string; context?: number }[]>([]);
+  const [probing, setProbing] = useState(false);
+  const [probeError, setProbeError] = useState<string | null>(null);
+  const [detected, setDetected] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
       try {
-        setData(await getJson<SettingsView>('/api/settings'));
+        const data = await getJson<PublicSettings>('/api/settings');
+        setSettings(data);
+        setAddress(data.baseUrl !== '' ? data.baseUrl : (data.providers?.[data.provider]?.baseUrl ?? ''));
       } catch {
-        /* server off */
+        setError(t('settings.loading'));
       }
     })();
+    // Loaded once: every later change writes to the server and re-reads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function refresh() {
-    try {
-      setData(await getJson<SettingsView>('/api/settings'));
-    } catch {
-      /* yok say */
-    }
-  }
-
-  async function save(patch: Record<string, unknown>, message = t('common.saved')) {
+  async function save(patch: Partial<Settings>): Promise<void> {
     setSaving(true);
+    setError(null);
     try {
-      const next = await patchJson<SettingsView>('/api/settings', patch);
-      setData(next);
-      props.onSaved(message);
-      props.onVoiceChanged();
+      const next = await patchJson<PublicSettings>('/api/settings', patch);
+      setSettings(next);
+      props.onSaved('');
+      if (typeof patch.locale === 'string') {
+        const resolved = patch.locale === 'auto' ? props.locale : (patch.locale as Locale);
+        props.onLocaleChange(resolved);
+      }
+      if ('speakReplies' in patch || 'voiceSpeed' in patch || 'wakeWord' in patch) props.onVoiceChanged();
     } catch (err) {
-      props.onSaved(t('settings.saveFailed', { detail: (err as Error).message }));
+      setError((err as Error).message);
     } finally {
       setSaving(false);
     }
   }
 
-  async function saveSecret(providerId: string) {
-    if (keyInput.trim() === '') {
-      props.onSaved(t('settings.keyMissing'));
+  async function detect(): Promise<void> {
+    if (address.trim() === '') {
+      setProbeError(t('settings.addressRequired'));
       return;
     }
-    setSaving(true);
+    setProbing(true);
+    setProbeError(null);
+    setDetected(null);
     try {
-      const next = await postJson<SettingsView>('/api/settings/secrets', { [providerId]: keyInput.trim() });
-      setData(next);
-      setKeyInput('');
-      props.onSaved(t('settings.saved.key', { provider: providerId }));
+      const result = await postJson<ProbeResponse>('/api/settings/probe', { address, key });
+      if (!result.ok) {
+        setProbeError(`${t('settings.detectFailed')}: ${result.error}`);
+        setModels([]);
+        return;
+      }
+      setModels(result.models);
+      setDetected(result.providerId);
+      // Remember the endpoint and the first model, so the fields below are usable at once.
+      await save({
+        provider: result.providerId,
+        model: result.models[0]?.id ?? settings?.model ?? '',
+        baseUrl: result.address,
+        providers: { ...(settings?.providers ?? {}), [result.providerId]: { baseUrl: result.address, model: result.models[0]?.id ?? '' } } as Settings['providers'],
+      });
+      if (key !== '') {
+        await postJson('/api/settings/secrets', { [result.providerId.split(':')[0] ?? result.providerId]: key });
+        props.onSaved(t('settings.probedOk', { count: result.models.length }));
+        setKey('');
+      } else {
+        props.onSaved(t('settings.probedOk', { count: result.models.length }));
+      }
     } catch (err) {
-      props.onSaved(t('settings.keySaveFailed', { detail: (err as Error).message }));
+      setProbeError(`${t('settings.detectFailed')}: ${(err as Error).message}`);
     } finally {
-      setSaving(false);
+      setProbing(false);
     }
   }
 
-  async function testProvider() {
-    setProbe(null);
-    try {
-      const res = await fetch(buildUrl('/api/settings/test'), { method: 'POST' });
-      const body = (await res.json()) as { ok: boolean; label?: string; ms?: number; reason?: string };
-      setProbe(body);
-    } catch (err) {
-      setProbe({ ok: false, reason: (err as Error).message });
-    }
+  function valueOf(key: SettingsKey): unknown {
+    if (!settings) return undefined;
+    const [head, tail] = splitKey(key);
+    const value = (settings as unknown as Record<string, unknown>)[head as string];
+    if (tail === undefined) return value;
+    return (value as Record<string, unknown> | undefined)?.[tail];
   }
 
-  if (!data) return <p className="empty">{t('settings.loading')}</p>;
+  function writeField(field: SettingsField, raw: string | boolean | number): void {
+    const [head, tail] = splitKey(field.key);
+    if (tail !== undefined) {
+      const current = (settings as unknown as Record<string, unknown>)[head as string] as Record<string, unknown>;
+      void save({ [head as string]: { ...current, [tail]: raw } } as Partial<Settings>);
+      return;
+    }
+    void save({ [head as string]: raw } as Partial<Settings>);
+  }
 
-  const activeCard = data.providerList.find((item) => item.id === data.provider);
-  const perProvider = data.providers?.[data.provider] ?? {};
-  const browserVoices = voices;
+  if (!settings) {
+    return <div className="settings-empty">{error ?? t('settings.loading')}</div>;
+  }
+
+  const active = SECTIONS.find((item) => item.id === section) ?? SECTIONS[0]!;
 
   return (
-    <section className="settings">
-      <header className="settings-head">
+    <div className="settings">
+      <nav className="settings-nav" aria-label={t('settings.title')}>
         <h2>{t('settings.title')}</h2>
-        <span className="settings-active">
-          {t('settings.active')}: <b>{data.providerInfo.active}</b> · {t('settings.model')}: <b>{data.providerInfo.model}</b>
-        </span>
-        {data.providerInfo.fellBack && <span className="chip-warn">{t('settings.fellBack')}</span>}
-      </header>
-
-      <div className="settings-group">
-        <h3>{t('settings.language')}</h3>
-        <p className="hint">{t('settings.languageHint')}</p>
-        <label className="field">
-          <span>{t('settings.language')}</span>
-          <select
-            value={data.locale}
-            onChange={(event) => {
-              const next = event.target.value as LocaleSetting;
-              void save({ locale: next }, t('common.saved'));
-              props.onLocaleChange(next === 'tr' ? 'tr' : next === 'en' ? 'en' : props.locale);
-            }}
+        {SECTIONS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={item.id === active.id ? 'active' : ''}
+            onClick={() => setSection(item.id)}
+            data-section={item.id}
           >
-            <option value="auto">{t('settings.languageAuto')}</option>
-            {/* Language names stay in their own language: a Turkish user looks for "Türkçe". */}
-            <option value="tr">{/* i18n-exempt */}Türkçe</option>
-            <option value="en">English</option>
-          </select>
-        </label>
-      </div>
-
-      <div className="settings-group">
-        <h3>{t('settings.provider')}</h3>
-        <p className="hint">
-          {t('settings.providerHint', {
-            local: data.providerList.filter((item) => item.local).length,
-            cloud: data.providerList.filter((item) => !item.local).length,
-          })}
+            {t(item.titleKey)}
+          </button>
+        ))}
+        <p className="settings-active">
+          {settings.provider} · {settings.model}
         </p>
-        <div className="provider-grid">
-          {data.providerList.map((card: ProviderCard) => (
-            <button
-              key={card.id}
-              className={`provider-card ${data.provider === card.id ? 'active' : ''}`}
-              onClick={() => void save({ provider: card.id }, t('settings.saved.provider', { label: card.label }))}
-              disabled={saving}
-            >
-              <span className="provider-name">
-                {card.label}
-                {card.configured && <em className="ok"><Icon name="action.approve" size={13} /></em>}
-              </span>
-              <span className="provider-hint">
-                {card.local
-                  ? t('settings.providerLocal')
-                  : card.configured
-                    ? t('settings.providerKeyed')
-                    : card.requiresKey
-                      ? t('settings.providerNeedsKey')
-                      : t('settings.providerReady')}
-                {card.hint && card.hint !== 'yerel' && card.hint !== 'bulut' ? ` · ${card.hint}` : ''}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      </nav>
 
-      <div className="settings-group">
-        <h3>{t('settings.modelSection')}</h3>
-        <label className="field">
-          <span>{t('settings.modelName')}</span>
-          <input
-            value={data.model}
-            onChange={(event) => setData({ ...data, model: event.target.value })}
-            onBlur={() => void save({ model: data.model }, t('settings.saved.model'))}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') void save({ model: data.model }, t('settings.saved.model'));
-            }}
-            placeholder="llama3.1 · claude-sonnet-4 · gemini-2.0-flash · gpt-4o-mini"
-          />
-        </label>
+      <div className="settings-body">
+        {error && <p className="settings-error">{error}</p>}
 
-        {(activeCard?.id === 'custom' || activeCard?.local === false) && (
-          <label className="field">
-            <span>
-              {activeCard?.id === 'custom'
-                ? t('settings.baseUrlRequired')
-                : `${t('settings.baseUrl')} (${t('common.optional')})`}
-            </span>
-            <input
-              value={perProvider.baseUrl ?? ''}
-              onChange={(event) =>
-                setData({
-                  ...data,
-                  providers: { ...data.providers, [data.provider]: { ...perProvider, baseUrl: event.target.value } },
-                })
-              }
-              onBlur={() =>
-                void save({ providers: { ...data.providers, [data.provider]: { ...perProvider } } }, t('settings.saved.baseUrl'))
-              }
-              placeholder="https://ornek/v1"
+        {active.id === 'model' && (
+          <section className="settings-card settings-probe">
+            <label>
+              <span>{t('settings.baseUrl')}</span>
+              <input
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+                placeholder="https://api.openai.com/v1"
+                spellCheck={false}
+              />
+            </label>
+            <p className="settings-hint">{t('settings.baseUrlHint')}</p>
+
+            <label>
+              <span>{t('settings.apiKey', { provider: settings.provider })}</span>
+              <input
+                type="password"
+                value={key}
+                onChange={(event) => setKey(event.target.value)}
+                placeholder={settings.secrets[settings.provider] ? t('settings.apiKeyStored') : t('settings.apiKeyInput')}
+                spellCheck={false}
+              />
+            </label>
+
+            <div className="settings-row">
+              <button type="button" className="settings-primary" onClick={() => void detect()} disabled={probing || saving}>
+                <Icon name={probing ? 'status.thinking' : 'action.refresh'} size={16} />
+                {probing ? t('settings.detecting') : t('settings.detect')}
+              </button>
+              {detected && <span className="settings-ok">{PROVIDER_LABEL[detected] ?? detected}</span>}
+              {models.length > 0 && <span className="settings-ok">{t('settings.probedOk', { count: models.length })}</span>}
+            </div>
+
+            {probeError && <p className="settings-error">{probeError}</p>}
+          </section>
+        )}
+
+        <section className="settings-card">
+          {active.fields.map((field) => (
+            <Field
+              key={`${active.id}-${String(field.key)}`}
+              field={field}
+              value={valueOf(field.key)}
+              models={models}
+              saving={saving}
+              onWrite={(raw) => writeField(field, raw)}
+              onProbe={() => void detect()}
+              probing={probing}
             />
-          </label>
-        )}
-
-        {activeCard?.id === 'azure-openai' && (
-          <>
-            <label className="field">
-              <span>{t('settings.deployment')}</span>
-              <input
-                value={perProvider.deployment ?? ''}
-                onChange={(event) =>
-                  setData({
-                    ...data,
-                    providers: { ...data.providers, azure: { ...perProvider, deployment: event.target.value } },
-                  })
-                }
-                onBlur={() => void save({ providers: { ...data.providers, [data.provider]: { ...perProvider } } })}
-                placeholder="gpt-4o"
-              />
-            </label>
-            <label className="field">
-              <span>api-version</span>
-              <input
-                value={perProvider.apiVersion ?? '2024-10-21'}
-                onChange={(event) =>
-                  setData({
-                    ...data,
-                    providers: { ...data.providers, [data.provider]: { ...perProvider, apiVersion: event.target.value } },
-                  })
-                }
-                onBlur={() => void save({ providers: { ...data.providers, [data.provider]: { ...perProvider } } })}
-              />
-            </label>
-          </>
-        )}
-
-        <div className="settings-actions">
-          <button onClick={() => void testProvider()} disabled={saving}>
-            {t('settings.testConnection')}
-          </button>
-        </div>
-        {probe && (
-          <p className={`hint ${probe.ok ? '' : 'warn'}`}>
-            {probe.ok
-              ? t('settings.connectionOk', { label: probe.label ?? '', ms: probe.ms ?? '' })
-              : t('settings.connectionFailed', {
-                  reason: (probe.reason ?? t('common.unknownError')).replace(/\s+/g, ' ').slice(0, 160),
-                })}
-          </p>
-        )}
+          ))}
+        </section>
       </div>
+    </div>
+  );
+}
 
-      <div className="settings-group">
-        <h3>{t('settings.apiKey', { provider: activeCard?.label ?? data.provider })}</h3>
-        <p className="hint">
-          {data.secrets[data.provider]
-            ? t('settings.apiKeyStored')
-            : data.envKeys[data.provider]
-              ? t('settings.apiKeyEnv')
-              : activeCard?.requiresKey
-                ? t('settings.apiKeyRequired')
-                : t('settings.apiKeyNotNeeded')}
-        </p>
-        <label className="field">
-          <span>{t('settings.apiKeyInput')}</span>
-          <input
-            type="password"
-            value={keyInput}
-            onChange={(event) => setKeyInput(event.target.value)}
-            placeholder="sk-… / gsk_… / AIza…"
-            autoComplete="off"
-          />
-        </label>
-        <div className="settings-actions">
-          <button className="primary" onClick={() => void saveSecret(data.provider)} disabled={saving}>
-            {t('common.save')}
-          </button>
-        </div>
+function Field(props: {
+  field: SettingsField;
+  value: unknown;
+  models: { id: string; context?: number }[];
+  saving: boolean;
+  onWrite: (raw: string | boolean | number) => void;
+  onProbe: () => void;
+  probing: boolean;
+}): JSX.Element | null {
+  const { t } = useI18n();
+  const { field } = props;
+
+  // The address and the key are drawn by the probe card above.
+  if (field.key === 'baseUrl') return null;
+  if (field.key === 'probe') return null;
+
+  const label = (
+    <>
+      <span>{t(field.labelKey)}</span>
+      {field.hintKey && <small>{t(field.hintKey)}</small>}
+    </>
+  );
+
+  if (field.kind === 'readonly') {
+    return (
+      <div className="settings-field">
+        <label>{label}</label>
+        <p className="settings-value">{String(props.value ?? '—')}</p>
       </div>
+    );
+  }
 
-      <div className="settings-group">
-        <h3>{t('settings.voice')}</h3>
-        <label className="toggle-row">
-          <input
-            type="checkbox"
-            checked={data.speakReplies}
-            onChange={(event) => void save({ speakReplies: event.target.checked })}
-          />
-          <span>{t('settings.speakReplies')}</span>
-        </label>
-        <label className="toggle-row">
-          <input
-            type="checkbox"
-            checked={data.wakeWord}
-            onChange={(event) => void save({ wakeWord: event.target.checked }, t('settings.saved.wakeWord'))}
-          />
-          <span>
-            {t('settings.wakeWord')} <em className="warn">{t('settings.wakeWordWarn')}</em>
-          </span>
-        </label>
-        <label className="field">
-          <span>{t('settings.voiceLang')}</span>
-          <select
-            value={data.voiceLang}
-            onChange={(event) => {
-              void save({ voiceLang: event.target.value }, t('settings.saved.voiceLang'));
-              props.onVoiceChanged();
-            }}
-          >
-            <option value="tr-TR">{t('settings.voiceLangTurkish')}</option>
-            <option value="en-US">{t('settings.voiceLangEnglish')}</option>
-          </select>
-        </label>
-        <label className="field">
-          <span>{t('settings.voiceName')}</span>
-          <select
-            value={data.voiceName ?? ''}
-            onChange={(event) => void save({ voiceName: event.target.value === '' ? null : event.target.value })}
-          >
-            <option value="">{t('settings.voiceAuto', { lang: data.voiceLang })}</option>
-            {browserVoices.map((voice) => (
-              <option key={voice.name} value={voice.name}>
-                {voice.name} · {voice.lang}
-                {voice.local ? ` · ${t('settings.voiceLocal')}` : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-        {browserVoices.length === 0 && (
-          <p className="hint warn">{t('settings.voiceListEmpty')}</p>
-        )}
-        {browserVoices.length > 0 && !browserVoices.some((v) => v.lang.toLowerCase().startsWith('tr')) && (
-          <p className="hint warn">
-            {t('settings.voiceNoTurkish')}
-          </p>
-        )}
-        {props.voice && (
-          <p className="hint">
-            {t('settings.voiceLocalRecognition')}:{' '}
-            <b>
-              {props.voice.status === 'ready'
-                ? t('settings.voiceStatus.ready')
-                : props.voice.status === 'no-model'
-                  ? t('settings.voiceStatus.noModel')
-                  : t('settings.voiceStatus.unavailable')}
-            </b>{' '}
-            · {t('settings.voicePrivacy')}
-          </p>
-        )}
-      </div>
-
-      <div className="settings-group">
-        <h3>{t('settings.autonomy')}</h3>
-        <p className="hint">
-          {t('settings.autonomyHint')}
-        </p>
-        <label className="toggle-row">
-          <input
-            type="checkbox"
-            checked={data.autonomy.enabled}
-            onChange={(event) =>
-              void save(
-                { autonomy: { ...data.autonomy, enabled: event.target.checked } },
-                event.target.checked ? t('settings.saved.autonomyOn') : t('settings.saved.autonomyOff'),
-              )
-            }
-          />
-          <span>{t('settings.autonomyEnabled')}</span>
-        </label>
-        <label className="field">
-          <span>{t('settings.autonomyIdle')}</span>
-          <input
-            type="number"
-            min={5}
-            max={240}
-            value={data.autonomy.idleMinutes}
-            onChange={(event) => {
-              const value = Number(event.target.value);
-              if (!Number.isFinite(value)) return;
-              setData({ ...data, autonomy: { ...data.autonomy, idleMinutes: value } });
-            }}
-            onBlur={() => void save({ autonomy: { ...data.autonomy } }, t('settings.saved.idle'))}
-          />
-        </label>
-        <label className="field">
-          <span>{t('settings.autonomyDaily')}</span>
-          <input
-            type="number"
-            min={0}
-            max={96}
-            value={data.autonomy.dailyRuns}
-            onChange={(event) => {
-              const value = Number(event.target.value);
-              if (!Number.isFinite(value)) return;
-              setData({ ...data, autonomy: { ...data.autonomy, dailyRuns: value } });
-            }}
-            onBlur={() => void save({ autonomy: { ...data.autonomy } }, t('settings.saved.daily'))}
-          />
-        </label>
-        <label className="toggle-row">
-          <input
-            type="checkbox"
-            checked={data.autonomy.research}
-            onChange={(event) =>
-              void save(
-                { autonomy: { ...data.autonomy, research: event.target.checked } },
-                t('settings.saved.research'),
-              )
-            }
-          />
-          <span>
-            {t('settings.autonomyResearch')} <em className="warn">{t('settings.autonomyResearchWarn')}</em>
-          </span>
-        </label>
-      </div>
-
-      <div className="settings-group">
-        <h3>{t('settings.behaviour')}</h3>
-        <label className="field">
-          <span>{t('settings.maxBackground', { count: data.maxBackground })}</span>
-          <input
-            type="range"
-            min={1}
-            max={6}
-            value={data.maxBackground}
-            onChange={(event) => setData({ ...data, maxBackground: Number(event.target.value) })}
-            onMouseUp={() => void save({ maxBackground: data.maxBackground })}
-          />
-        </label>
-        <label className="toggle-row">
-          <input
-            type="checkbox"
-            checked={data.allowPaidSleep}
-            onChange={(event) => void save({ allowPaidSleep: event.target.checked }, t('settings.saved.paidSleep'))}
-          />
-          <span>
-            {t('settings.allowPaidSleep')} <em className="warn">{t('settings.allowPaidSleepWarn')}</em>
-          </span>
-        </label>
-        <button className="dash-ghost" onClick={() => void refresh()}>
-          {t('common.refresh')}
+  if (field.kind === 'toggle') {
+    return (
+      <div className="settings-field settings-toggle">
+        <label>{label}</label>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={props.value === true}
+          className={props.value === true ? 'on' : ''}
+          disabled={props.saving}
+          onClick={() => props.onWrite(props.value !== true)}
+        >
+          <Icon name={props.value === true ? 'action.approve' : 'action.reject'} size={13} />
         </button>
       </div>
-    </section>
+    );
+  }
+
+  if (field.kind === 'select') {
+    const options: { value: string; labelKey?: Key; label?: string }[] =
+      field.key === 'model' && props.models.length > 0
+        ? props.models.map((m) => ({ value: m.id, label: m.context ? `${m.id} · ${Math.round(m.context / 1000)}k` : m.id }))
+        : (field.options ?? []);
+    return (
+      <div className="settings-field">
+        <label>{label}</label>
+        <select value={String(props.value ?? '')} disabled={props.saving} onChange={(event) => props.onWrite(event.target.value)}>
+          {options.length === 0 && <option value={String(props.value ?? '')}>{String(props.value ?? '—')}</option>}
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.labelKey ? t(option.labelKey) : (option.label ?? option.value)}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  if (field.kind === 'number') {
+    return (
+      <div className="settings-field">
+        <label>{label}</label>
+        <input
+          type="number"
+          value={Number(props.value ?? 0)}
+          disabled={props.saving}
+          onChange={(event) => props.onWrite(Number(event.target.value))}
+        />
+      </div>
+    );
+  }
+
+  if (field.kind === 'hour') {
+    const hour = props.value === null || props.value === undefined ? -1 : Number(props.value);
+    return (
+      <div className="settings-field">
+        <label>{label}</label>
+        <select value={String(hour)} disabled={props.saving} onChange={(event) => props.onWrite(Number(event.target.value))}>
+          <option value="-1">{t('settings.consolidationOff')}</option>
+          {Array.from({ length: 24 }, (_, h) => (
+            <option key={h} value={h}>
+              {String(h).padStart(2, '0')}:00
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  /** Text fields (fallbackModel and anything added later). */
+  return (
+    <div className="settings-field">
+      <label>{label}</label>
+      <input value={String(props.value ?? '')} disabled={props.saving} onChange={(event) => props.onWrite(event.target.value)} />
+    </div>
   );
 }

@@ -20,6 +20,9 @@ export type AutonomySettings = {
   research: boolean;
 };
 
+/** How much KAREN may do to the machine without asking: see the computer tools. */
+export type ComputerMode = 'off' | 'ask' | 'allow';
+
 export type Settings = {
   provider: ProviderId;
   model: string;
@@ -36,6 +39,22 @@ export type Settings = {
   providers: Record<string, ProviderConfig>;
   /** Autonomous background work; off by default, the user turns it on. */
   autonomy: AutonomySettings;
+  /** Direct mouse/keyboard/window control. `ask` is the only safe default. */
+  computerControl: ComputerMode;
+  /** Screenshots may be read by a vision model. */
+  screenshots: boolean;
+  /** Used when the main provider errors; empty means none. */
+  fallbackModel: string;
+  /** Hour of the daily consolidation, or null for "never automatically". */
+  consolidationHour: number | null;
+  density: 'comfortable' | 'compact';
+  reducedMotion: boolean;
+  /** 0.7 – 1.3, applied as Piper's length scale. */
+  voiceSpeed: number;
+  /** Piper voice id per speech language. */
+  voiceByLang: Record<'tr-TR' | 'en-US', string>;
+  /** True once the first-run wizard has been dismissed. */
+  onboarded: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -51,6 +70,15 @@ export const DEFAULT_SETTINGS: Settings = {
   locale: 'auto',
   providers: {},
   autonomy: { enabled: false, idleMinutes: 30, dailyRuns: 24, research: true },
+  computerControl: 'ask',
+  screenshots: true,
+  fallbackModel: '',
+  consolidationHour: null,
+  density: 'comfortable',
+  reducedMotion: false,
+  voiceSpeed: 1,
+  voiceByLang: { 'tr-TR': 'tr_TR-dfki-medium', 'en-US': 'en_GB-alba-medium' },
+  onboarded: false,
 };
 
 export type Secrets = Record<string, string>;
@@ -134,9 +162,11 @@ export class SettingsStore {
 
   /** Effective key for a provider: disk > environment variable. */
   apiKey(id: string): string | undefined {
-    const stored = this.secrets()[id];
+    // `custom:host` keeps its key under `custom`.
+    const base = id.split(':')[0] ?? id;
+    const stored = this.secrets()[base];
     if (stored) return stored;
-    const spec = PROVIDERS.find((item) => item.id === id);
+    const spec = PROVIDERS.find((item) => item.id === base);
     const envName = spec?.apiKeyEnv;
     return envName ? this.env[envName] || undefined : undefined;
   }
@@ -188,7 +218,8 @@ function sanitize(patch: Partial<Settings>): Partial<Settings> {
   if (patch.providers && typeof patch.providers === 'object') {
     const providers: Record<string, ProviderConfig> = {};
     for (const [id, raw] of Object.entries(patch.providers as Record<string, unknown>)) {
-      if (!/^[a-z0-9-]{1,40}$/i.test(id) || !raw || typeof raw !== 'object') continue;
+      // Same id shape as `provider`: presets are plain, detected hosts carry a colon.
+      if (!/^[a-z0-9][a-z0-9.:-]{0,79}$/i.test(id) || !raw || typeof raw !== 'object') continue;
       const entry = raw as Record<string, unknown>;
       providers[id] = {
         ...(typeof entry['baseUrl'] === 'string' ? { baseUrl: entry['baseUrl'].trim().slice(0, 300) } : {}),
@@ -209,6 +240,29 @@ function sanitize(patch: Partial<Settings>): Partial<Settings> {
       research: typeof raw['research'] === 'boolean' ? raw['research'] : base.research,
     };
   }
+  if (patch.computerControl === 'off' || patch.computerControl === 'ask' || patch.computerControl === 'allow') {
+    out.computerControl = patch.computerControl;
+  }
+  if (typeof patch.screenshots === 'boolean') out.screenshots = patch.screenshots;
+  if (typeof patch.fallbackModel === 'string') out.fallbackModel = patch.fallbackModel.trim().slice(0, 120);
+  if (patch.consolidationHour === null) out.consolidationHour = null;
+  else if (typeof patch.consolidationHour === 'number' && Number.isFinite(patch.consolidationHour)) {
+    out.consolidationHour = Math.min(23, Math.max(0, Math.round(patch.consolidationHour)));
+  }
+  if (patch.density === 'comfortable' || patch.density === 'compact') out.density = patch.density;
+  if (typeof patch.reducedMotion === 'boolean') out.reducedMotion = patch.reducedMotion;
+  if (typeof patch.voiceSpeed === 'number' && Number.isFinite(patch.voiceSpeed)) {
+    out.voiceSpeed = Math.min(1.3, Math.max(0.7, Math.round(patch.voiceSpeed * 100) / 100));
+  }
+  if (patch.voiceByLang && typeof patch.voiceByLang === 'object') {
+    const raw = patch.voiceByLang as Record<string, unknown>;
+    const base = DEFAULT_SETTINGS.voiceByLang;
+    out.voiceByLang = {
+      'tr-TR': typeof raw['tr-TR'] === 'string' && raw['tr-TR'].trim() !== '' ? raw['tr-TR'].trim().slice(0, 80) : base['tr-TR'],
+      'en-US': typeof raw['en-US'] === 'string' && raw['en-US'].trim() !== '' ? raw['en-US'].trim().slice(0, 80) : base['en-US'],
+    };
+  }
+  if (typeof patch.onboarded === 'boolean') out.onboarded = patch.onboarded;
   return out;
 }
 
@@ -218,5 +272,29 @@ function clampInt(value: unknown, min: number, max: number, fallback: number): n
 }
 
 function isValidProvider(value: string): value is ProviderId {
-  return /^[a-z0-9-]{1,40}$/i.test(value);
+  // A detected endpoint that is not a preset keeps its host: `custom:api.example.com`.
+  return /^[a-z0-9][a-z0-9.:-]{0,79}$/i.test(value);
+}
+
+/**
+ * Applies a probe result: the provider, its address, its model and its key.
+ * A `custom:<host>` id stores its config under the full id and its secret under `custom`,
+ * so two different endpoints never overwrite each other's key.
+ */
+export function applyProbe(
+  store: SettingsStore,
+  input: { address: string; key: string; providerId: string; model: string },
+): Settings {
+  const current = store.get();
+  const config = { baseUrl: input.address, model: input.model };
+  const next = store.set({
+    provider: input.providerId,
+    model: input.model,
+    providers: { ...current.providers, [input.providerId]: config },
+  });
+  if (input.key !== '') {
+    const secretId = input.providerId.split(':')[0] ?? input.providerId;
+    store.setSecrets({ [secretId]: input.key });
+  }
+  return next;
 }

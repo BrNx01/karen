@@ -431,6 +431,17 @@ export const en = {
   'settings.showOnboarding': 'Show the setup wizard again',
   'settings.showOnboardingHint': 'Takes effect next time the app opens.',
   'settings.maxBackgroundHint': 'How many sessions may run at once.',
+  'cockpit.core': 'Core',
+  'cockpit.memory': 'Memory',
+  'cockpit.system': 'System',
+  'cockpit.conversation': 'Conversation',
+  'cockpit.collapseLeft': 'Hide the left panel',
+  'cockpit.collapseRight': 'Hide the conversation panel',
+  'cockpit.zen': 'Clear the screen',
+  'cockpit.exitZen': 'Show panels',
+  'dashboard.stat.conflicts': 'Conflict',
+  'cockpit.showLeft': 'Show the left panel',
+  'cockpit.showRight': 'Show the conversation panel',
 } as const;
 
 export type Dictionary = Record<keyof typeof en, string>;

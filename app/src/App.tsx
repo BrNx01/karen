@@ -10,7 +10,8 @@ import { InboxScreen } from './components/Inbox.js';
 import { SettingsScreen } from './components/Settings.js';
 import { MemoryGrid } from './components/MemoryGrid.js';
 import { BrainMapView } from './components/BrainMap.js';
-import { CommandCenter, type StageScreen } from './components/CommandCenter.js';
+import type { StageScreen } from './screens.js';
+import { Cockpit } from './components/Cockpit.js';
 import { AppShell } from './components/AppShell.js';
 import { I18nProvider, useI18n } from './i18n.js';
 import { Icon } from './icons.js';
@@ -30,6 +31,7 @@ import './polish.css';
 import './command.css';
 import './shell.css';
 import './settings.css';
+import './cockpit.css';
 
 type NoteView = Note & { strength?: number };
 type SettingsValue = {
@@ -660,16 +662,17 @@ function AppBody(props: { locale: Locale; onLocaleChange: (locale: Locale) => vo
     >
       <div className={`cc-body ${screen === 'overview' ? 'overview' : 'detail'}`}>
           {screen === 'overview' && (
-            <CommandCenter
+            <Cockpit
               data={dashboard}
-              onNavigate={navigate}
-              onSelectSession={(id) => {
-                setScreen('chat');
-                dispatch({ type: 'select', sessionId: id });
-                socket.current?.send(JSON.stringify({ type: 'open', sessionId: id }));
-              }}
+              messages={state.messages}
+              streaming={state.streaming}
+              approvals={state.approvals}
+              listening={listening}
+              sleeping={sleeping}
+              onTalk={() => void talk()}
               onSleep={() => void runSleep()}
-              busy={sleeping}
+              onNavigate={navigate}
+              onDecide={(approval, allow) => decide(approval, allow)}
             />
           )}
 

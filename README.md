@@ -12,7 +12,7 @@
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-e11d2e"></a>
   <img alt="platform" src="https://img.shields.io/badge/platform-Windows-e11d2e">
   <img alt="providers" src="https://img.shields.io/badge/providers-18-e11d2e">
-  <img alt="tests" src="https://img.shields.io/badge/tests-867-e11d2e">
+  <img alt="tests" src="https://img.shields.io/badge/tests-880-e11d2e">
   <img alt="interface" src="https://img.shields.io/badge/interface-English%20%7C%20Türkçe-e11d2e">
 </p>
 
@@ -37,7 +37,7 @@ npm run karen -- serve          # prints a tokenised 127.0.0.1 URL
 ```
 
 Or install the Windows build and skip the terminal:
-[**KAREN-Setup-1.1.0.exe**](https://github.com/BrNx01/karen/releases/latest).
+[**KAREN-Setup-1.2.0.exe**](https://github.com/BrNx01/karen/releases/latest).
 
 > KAREN is an independent project. It is not affiliated with, sponsored by, or built
 > from any commercial assistant; the design is its own and every screenshot below is
@@ -45,20 +45,34 @@ Or install the Windows build and skip the terminal:
 
 ## See KAREN in action
 
-Real captures from the 1.1.0 build, taken from a seeded demo profile — no personal
+Real captures from the 1.2.0 build, taken from a seeded demo profile — no personal
 memory, paths or keys appear in any of them.
 
-| Command Center | Chat |
+| Cockpit | Chat |
 | :---: | :---: |
-| [![Command center: rail, core orb, live feed, recent actions and system gauges](docs/assets/showcase/command-center.png)](docs/assets/showcase/command-center.png) | [![Chat with the contextual panel showing approvals and agents](docs/assets/showcase/chat.png)](docs/assets/showcase/chat.png) |
+| [![Cockpit: three live cards, the core at the centre, the conversation on the right](docs/assets/showcase/command-center.png)](docs/assets/showcase/command-center.png) | [![Chat with the contextual panel showing approvals and agents](docs/assets/showcase/chat.png)](docs/assets/showcase/chat.png) |
 | **Memory** | **Brain map** |
 | [![Memory notes by layer, with strength and trauma marks](docs/assets/showcase/memory.png)](docs/assets/showcase/memory.png) | [![Brain map: continents, cities and streets on one canvas](docs/assets/showcase/brain-map.png)](docs/assets/showcase/brain-map.png) |
 
 [![Settings: one address, a Detect button, sections for voice, computer, memory, autonomy](docs/assets/showcase/settings.png)](docs/assets/showcase/settings.png)
 
+## The cockpit
+
+One screen, and all of it gets out of the way:
+
+- **Three live cards** — the core's inner state, memory by layer, and real CPU/RAM/heap
+  gauges. When KAREN does something, the card that explains it steps forward for four
+  seconds and the others fade back.
+- **The core** in the middle: the mark, three counter-rotating rings, and five actions —
+  talk, consolidate now, inbox, growth, and *clear the screen*.
+- **The conversation** on the right, with approval cards where they belong.
+- **Collapse anything**: each panel has an edge handle, and *clear the screen* hides
+  both, leaving only the core and the composer. The layout is remembered between
+  launches. Nothing is a still picture.
+
 ## Download and use
 
-- **[Windows installer](https://github.com/BrNx01/karen/releases/latest/download/KAREN-Setup-1.1.0.exe)** —
+- **[Windows installer](https://github.com/BrNx01/karen/releases/latest/download/KAREN-Setup-1.2.0.exe)** —
   run it, open KAREN. It updates itself from then on.
 - The installer is **unsigned**, so Windows warns about an unknown publisher:
   *More info → Run anyway*. Code signing removes that warning.
@@ -192,7 +206,7 @@ docs/            design records, plans, screenshots
 ## Development
 
 ```bash
-npm test               # 867 tests
+npm test               # 880 tests
 npx tsc -p tsconfig.json --noEmit
 npm run build          # server + interface
 npm run desktop        # run in Electron
@@ -208,7 +222,7 @@ node scripts/demo-profile.mjs "$TEMP/karen-demo"
 node dist/server/cli.js serve --port 7474 --data "$TEMP/karen-demo" --root .
 ```
 
-Releasing: bump `version`, `git tag v1.1.0 && git push --tags`. CI builds the installer,
+Releasing: bump `version`, `git tag v1.2.0 && git push --tags`. CI builds the installer,
 rebuilds the native module for Electron, and publishes it; installed apps pick the update
 up by themselves.
 

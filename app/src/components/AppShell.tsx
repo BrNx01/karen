@@ -2,7 +2,7 @@ import { useEffect, useState, type JSX, type ReactNode } from 'react';
 import { Icon } from '../icons.js';
 import { useI18n } from '../i18n.js';
 import { RAIL, shouldCollapse } from '../shell.js';
-import type { StageScreen } from './CommandCenter.js';
+import type { StageScreen } from '../screens.js';
 
 /**
  * The frame: an icon rail, one stage, a context panel and a composer that never

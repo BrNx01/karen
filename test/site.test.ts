@@ -24,7 +24,7 @@ describe('landing page', () => {
   });
 
   it('links the installer and the repository', () => {
-    expect(html).toContain('KAREN-Setup-1.1.0.exe');
+    expect(html).toContain('KAREN-Setup-1.2.0.exe');
     expect(html).toContain('https://github.com/BrNx01/karen/releases/latest');
   });
 

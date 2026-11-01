@@ -3,6 +3,38 @@
 This file follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-11-01
+
+The command center becomes a cockpit: one screen, three live cards, and a layout that
+gets out of the way.
+
+### Added
+
+- **Cockpit layout** — core / memory / system cards on the left, the core in the middle,
+  the conversation on the right. Replaces the four-quadrant dashboard.
+- **Cards that answer back** — when KAREN writes memory, changes state or runs a tool,
+  the card that explains it steps forward for four seconds and the others fade back.
+- **Collapsible everything** — an edge handle per panel, plus *clear the screen* (zen),
+  which hides both and leaves the core and composer alone. The layout is stored and
+  restored on the next launch.
+- **Five core actions** — talk, consolidate now, inbox, growth, clear the screen — with
+  live badges for unread notes and pending proposals.
+- **Real gauges** — CPU, RAM and heap dials plus turns/tools/conflicts/approvals, all from
+  the process, none invented.
+
+### Changed
+
+- The dashboard component is gone; the cockpit is the overview now. Memory, Inbox, Map,
+  Skills, Growth, Repos and Settings keep their own screens.
+- Panel toggles are always visible at 55 % opacity: a control hidden until hover is a
+  control nobody finds.
+
+### Fixed
+
+- Collapsing a panel used to remove the only button that could reopen it; a collapsed
+  panel now leaves an edge handle.
+- The first event on load no longer steals focus from a card: only new events do.
+
 ## [1.1.0] — 2026-11-01
 
 A redesign rather than a feature drop: the app now looks and behaves like the thing it

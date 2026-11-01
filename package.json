@@ -1,7 +1,7 @@
 {
   "name": "karen",
   "productName": "KAREN",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "author": "KAREN contributors",
   "description": "Local agent hub and second brain - a JARVIS-style command center",

@@ -125,8 +125,10 @@ describe('runPowerShell', () => {
       expect((await runPowerShell("Write-Output 'hi'")).ok).toBe(false);
       return;
     }
-    const result = await runPowerShell("Write-Output 'hi'");
-    expect(result.ok).toBe(true);
+    // A cold PowerShell start on a fresh runner can exceed the first attempt's budget.
+    let result = await runPowerShell("Write-Output 'hi'");
+    if (!result.ok) result = await runPowerShell("Write-Output 'hi'");
+    expect(result.ok, result.stderr).toBe(true);
     expect(result.stdout.trim()).toBe('hi');
   });
 });

@@ -2,11 +2,11 @@ import { spawn } from 'node:child_process';
 import type { Tool, ToolResult } from './types.js';
 
 /**
- * Direct computer control. One `powershell.exe` per action with inline C#: no native
- * helper to build, sign or supervise, and every action is bounded to two seconds.
- * Whether an action is allowed is decided by `computer-policy.ts`, not here.
+ * Hard stop for one action. Four seconds, not two: a cold `powershell.exe` start on a
+ * fresh CI runner or a busy desktop can take longer than two, and a timeout must never
+ * be mistaken for a rejected action.
  */
-const TIMEOUT_MS = 2000;
+const TIMEOUT_MS = 4000;
 
 export type ShellResult = { ok: boolean; stdout: string; stderr: string };
 export type Runner = (script: string) => Promise<ShellResult>;

@@ -18,6 +18,7 @@ import { PreferenceStore } from './brain/preferences.js';
 import { buildDashboard } from './dashboard.js';
 import { buildIntuitions } from './memory/intuition.js';
 import { detectVoice, speak, LocalWhisper, isWav, type VoiceInfo } from './voice/index.js';
+import { synthesise, VoiceEngineMissing } from './voice/piper.js';
 import { SettingsStore, type Settings } from './settings.js';
 import { buildProvider, SwitchableProvider } from './engine/switchable.js';
 import { ProposalStore } from './growth/store.js';
@@ -303,6 +304,24 @@ export async function startKarenServer(opts: ServeOptions = {}): Promise<Running
           settings.voiceName ??
           info.speech.voices.find((v) => v.culture.toLowerCase().startsWith(settings.voiceLang.slice(0, 2)))?.name;
         return speak(text, voice === undefined ? {} : { voice });
+      },
+      audio: async (input) => {
+        const settings = currentSettings();
+        try {
+          const { wav } = await synthesise({
+            text: input.text,
+            lang: input.lang,
+            dataDir,
+            speed: settings.voiceSpeed,
+            voice: settings.voiceByLang[input.lang],
+          });
+          return { ok: true, wav };
+        } catch (err) {
+          if (err instanceof VoiceEngineMissing) {
+            return { ok: false, reason: 'voice engine is not installed' };
+          }
+          return { ok: false, reason: err instanceof Error ? err.message : String(err) };
+        }
       },
     },
     inbox: {

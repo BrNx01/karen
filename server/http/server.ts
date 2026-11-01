@@ -42,6 +42,8 @@ export type KarenServerOptions = {
     status: () => Promise<VoiceInfo>;
     transcribe: (audio: Buffer) => Promise<{ ok: boolean; text?: string; reason?: string }>;
     speak: (text: string) => Promise<{ ok: boolean; reason?: string }>;
+    /** Offline neural speech; 503 with a reason when the engine is not installed. */
+    audio: (input: { text: string; lang: 'tr-TR' | 'en-US' }) => Promise<{ ok: true; wav: Buffer } | { ok: false; reason: string }>;
   };
   settings?: {
     get: () => PublicSettings;
@@ -458,6 +460,23 @@ export function createKarenServer(opts: KarenServerOptions): KarenServer {
         }
         const result = await voice.speak(text);
         sendJson(res, result.ok ? 200 : 503, result);
+        return;
+      }
+      if (req.method === 'GET' && parts[2] === 'audio') {
+        // The offline neural voice: returns a WAV the renderer plays as-is.
+        const text = (url.searchParams.get('text') ?? '').trim();
+        const lang = url.searchParams.get('lang') === 'tr-TR' ? 'tr-TR' : 'en-US';
+        if (text === '') {
+          sendJson(res, 400, { error: 'text required' });
+          return;
+        }
+        const spoken = await voice.audio({ text, lang });
+        if (!spoken.ok) {
+          sendJson(res, 503, { error: spoken.reason });
+          return;
+        }
+        res.writeHead(200, { 'content-type': 'audio/wav', 'content-length': spoken.wav.length, 'cache-control': 'no-store' });
+        res.end(spoken.wav);
         return;
       }
       sendJson(res, 404, errorBody(locale, 'server.notFound'));

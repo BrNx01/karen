@@ -172,10 +172,21 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}" wid
 </svg>
 `;
 
+// Same mark without the tile, for use on an already-dark surface (app core, site hero).
+const inner = svg.slice(svg.indexOf('<defs>'), svg.indexOf('</svg>')).replace(
+  `<rect width="${S}" height="${S}" rx="${R.tile}" fill="#08080a"/>\n  `,
+  '',
+);
+const round = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}" width="${S}" height="${S}" role="presentation">
+  ${inner}</svg>
+`;
+
 mkdirSync('site/assets', { recursive: true });
 writeFileSync('site/assets/karen-mark.svg', svg);
+writeFileSync('site/assets/karen-mark-round.svg', round);
 // The app serves its dist root, so the favicon needs a copy under public/.
 mkdirSync('app/public', { recursive: true });
 writeFileSync('app/public/karen-mark.svg', svg);
+writeFileSync('app/public/karen-mark-round.svg', round);
 
 console.log(`electron/icon.png ${(png.length / 1024).toFixed(1)} KB · site/assets/karen-mark.svg ${(svg.length / 1024).toFixed(1)} KB`);

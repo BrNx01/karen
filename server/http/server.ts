@@ -545,7 +545,7 @@ export function createKarenServer(opts: KarenServerOptions): KarenServer {
     const index = join(dist, 'index.html');
     if (!existsSync(index)) {
       res.writeHead(200, { 'content-type': MIME['.html'] ?? 'text/plain' });
-      res.end('<h1>KAREN sunucusu calisiyor</h1><p>Arayuz derlenmemis (app/dist yok).</p>');
+      res.end('<h1>KAREN server is running</h1><p>The interface is not built (app/dist is missing).</p>');
       return;
     }
     const relative = normalize(pathname).replace(/^[/\\]+/, '');

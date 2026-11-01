@@ -181,7 +181,7 @@ export function CommandCenter(props: {
           <span className="cc-ring r2" />
           <span className="cc-ring r3" />
           <span className="cc-globe" />
-          <b className="cc-word">KAREN</b>
+          <img className="cc-core-mark" src="/karen-mark-round.svg" alt="" width={188} height={188} />
           <small>{t('dashboard.tagline')}</small>
         </div>
         <div className="cc-core-stats">
@@ -279,9 +279,9 @@ export function CommandCenter(props: {
         </h3>
         <div className="cc-insight-body">
           <div className="cc-bars">
-            <Bar label={t('memory.kind.semantic')} value={data?.memory.semantic ?? 0} total={data?.memory.notes ?? 1} color="#5aa2ff" />
-            <Bar label={t('memory.kind.episodic')} value={data?.memory.episodic ?? 0} total={data?.memory.notes ?? 1} color="#38e1c0" />
-            <Bar label={t('dashboard.bar.dormant')} value={data?.memory.dormant ?? 0} total={data?.memory.notes ?? 1} color="#6b7688" />
+            <Bar label={t('memory.kind.semantic')} value={data?.memory.semantic ?? 0} total={data?.memory.notes ?? 1} color="var(--data)" />
+            <Bar label={t('memory.kind.episodic')} value={data?.memory.episodic ?? 0} total={data?.memory.notes ?? 1} color="var(--accent)" />
+            <Bar label={t('dashboard.bar.dormant')} value={data?.memory.dormant ?? 0} total={data?.memory.notes ?? 1} color="var(--faint)" />
           </div>
           <ul className="cc-mini">
             <li>

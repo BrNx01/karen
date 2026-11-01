@@ -10,7 +10,8 @@ import { InboxScreen } from './components/Inbox.js';
 import { SettingsScreen } from './components/Settings.js';
 import { MemoryGrid } from './components/MemoryGrid.js';
 import { BrainMapView } from './components/BrainMap.js';
-import { Sidebar, CommandCenter, type StageScreen } from './components/CommandCenter.js';
+import { CommandCenter, type StageScreen } from './components/CommandCenter.js';
+import { AppShell } from './components/AppShell.js';
 import { I18nProvider, useI18n } from './i18n.js';
 import { Icon } from './icons.js';
 import { localeTag, osLocaleTag } from './locale.js';
@@ -27,6 +28,7 @@ import type { VoiceInfo } from '../../server/voice/index.js';
 import './styles.css';
 import './polish.css';
 import './command.css';
+import './shell.css';
 
 type NoteView = Note & { strength?: number };
 type SettingsValue = {
@@ -528,34 +530,131 @@ function AppBody(props: { locale: Locale; onLocaleChange: (locale: Locale) => vo
     if (next === 'map') void loadMap();
   }
 
+  function selectSession(id: string) {
+    setScreen('chat');
+    dispatch({ type: 'select', sessionId: id });
+    socket.current?.send(JSON.stringify({ type: 'open', sessionId: id }));
+  }
+
+  function stopTurn() {
+    if (!state.activeId) return;
+    setListening(false);
+    stopSpeaking();
+    socket.current?.send(JSON.stringify({ type: 'abort', sessionId: state.activeId }));
+  }
+
   const status = dashboard?.status ?? 'optimal';
 
+  const context = screen === 'overview' ? undefined : (
+    <>
+      <h3>{t('chat.approvalTitle')}</h3>
+      {state.approvals.length === 0 && <p className="context-empty">{t('common.none')}</p>}
+      {state.approvals.map((approval) => (
+        <ApprovalCard
+          key={approval.requestId}
+          approval={approval}
+          sessionTitle={state.sessions.find((session) => session.id === approval.sessionId)?.title}
+          onDecide={(allow) => decide(approval, allow)}
+        />
+      ))}
+
+      <h3>{t('dashboard.activeAgents')}</h3>
+      <ul className="context-list">
+        {state.sessions.slice(0, 5).map((session) => (
+          <li key={session.id} onClick={() => selectSession(session.id)}>
+            <b>{session.title}</b>
+            <small>{session.status}</small>
+          </li>
+        ))}
+        {state.sessions.length === 0 && <li className="muted">{t('dashboard.noAgents')}</li>}
+      </ul>
+
+      <h3>{t('dashboard.feed')}</h3>
+      <ul className="context-list feed">
+        {(dashboard?.events ?? []).slice(0, 6).map((event, index) => (
+          <li key={`${event.at}-${index}`} className={event.tone}>
+            <b>{event.text}</b>
+            <small>{new Date(event.at).toLocaleTimeString(localeTag(props.locale), { hour: '2-digit', minute: '2-digit' })}</small>
+          </li>
+        ))}
+        {(dashboard?.events ?? []).length === 0 && <li className="muted">{t('dashboard.noEventsHint')}</li>}
+      </ul>
+    </>
+  );
+
   return (
-    <div className="cc-shell">
-      <Sidebar screen={screen} data={dashboard} onNavigate={navigate} onTalk={() => void talk()} listening={listening} />
-
-      <div className="cc-stage">
-        <header className="cc-topbar">
-          <span className={`cc-status-pill ${status}`}>
-            <b>{t(`dashboard.status.${status}` as never)}</b>
-          </span>
-          <div className="cc-topbar-center">
-            <small>{clockNow.toLocaleDateString(localeTag(props.locale), { weekday: 'long', day: 'numeric', month: 'long' })}</small>
-            <b>{clockNow.toLocaleTimeString(localeTag(props.locale))}</b>
-          </div>
-          <div className="cc-topbar-right">
-            {state.error && <span className="cc-chip bad" title={state.error}>{state.error.slice(0, 42)}</span>}
-            {state.notice && <span className="cc-chip">{state.notice.slice(0, 42)}</span>}
-            {wakeActive && <span className="cc-chip live">hey karen</span>}
-            {state.approvals.length > 0 && <span className="cc-chip warn">{t('chat.approvalTitle')} · {state.approvals.length}</span>}
-            <span className="cc-chip">{t(STAGE_KEYS[screen] as never)}</span>
-            <span className={`cc-chip ${state.connected ? 'live' : 'bad'}`}>
-              {state.connected ? t('common.enabled') : t('app.offline')}
+    <AppShell
+      screen={screen}
+      onNavigate={navigate}
+      title={t(STAGE_KEYS[screen] as never)}
+      connected={state.connected}
+      listening={listening}
+      onTalk={() => void talk()}
+      badges={{
+        inbox: dashboard?.unreadInbox ?? null,
+        memory: dashboard?.memory.notes ?? null,
+        growth: dashboard?.pendingProposals ?? null,
+      }}
+      context={context}
+      topbarRight={
+        <>
+          <span className={`cc-chip status ${status}`}>{t(`dashboard.status.${status}` as never)}</span>
+          <span className="cc-chip mono">{clockNow.toLocaleTimeString(localeTag(props.locale))}</span>
+          {wakeActive && <span className="cc-chip live">hey karen</span>}
+          {state.notice && <span className="cc-chip">{state.notice.slice(0, 42)}</span>}
+          {state.error && (
+            <span className="cc-chip bad" title={state.error}>
+              {state.error.slice(0, 42)}
             </span>
+          )}
+        </>
+      }
+      composer={
+        <form
+          className="cc-talk"
+          onSubmit={(event) => {
+            event.preventDefault();
+            send();
+          }}
+        >
+          <div className={`cc-talk-inner ${listening ? 'live' : ''}`}>
+            <button
+              type="button"
+              className={`cc-talk-mic ${listening ? 'live' : ''}`}
+              onClick={() => void talk()}
+              title={t('chat.mic')}
+            >
+              <Icon name="action.mic" size={18} />
+            </button>
+            <input
+              className="cc-talk-input"
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder={
+                listening
+                  ? t('chat.listeningHint')
+                  : t('chat.placeholderIdle', { wake: t('settings.wakeWord') })
+              }
+              disabled={listening}
+            />
+            {state.streaming ? (
+              <button className="cc-talk-send stop" type="button" onClick={stopTurn} title={t('chat.stop')}>
+                <Icon name="action.stop" size={16} />
+              </button>
+            ) : (
+              <button className="cc-talk-send" type="submit" disabled={listening}>
+                <Icon name="action.send" size={16} />
+              </button>
+            )}
           </div>
-        </header>
-
-        <div className={`cc-body ${screen === 'overview' ? 'overview' : 'detail'}`}>
+          <div className="cc-talk-side">
+            <span className="cc-chip">{state.sessions.find((s) => s.id === state.activeId)?.title ?? t('chat.sessionTitle')}</span>
+            {state.streaming && <span className="cc-chip live">{t('chat.streaming')}</span>}
+          </div>
+        </form>
+      }
+    >
+      <div className={`cc-body ${screen === 'overview' ? 'overview' : 'detail'}`}>
           {screen === 'overview' && (
             <CommandCenter
               data={dashboard}
@@ -685,52 +784,6 @@ function AppBody(props: { locale: Locale; onLocaleChange: (locale: Locale) => vo
           )}
         </div>
 
-        {state.approvals.map((approval) => (
-          <ApprovalCard
-            key={approval.requestId}
-            approval={approval}
-            sessionTitle={state.sessions.find((session) => session.id === approval.sessionId)?.title}
-            onDecide={(allow) => decide(approval, allow)}
-          />
-        ))}
-
-        <form
-          className="cc-talk"
-          onSubmit={(event) => {
-            event.preventDefault();
-            send();
-          }}
-        >
-          <div className={`cc-talk-inner ${listening ? 'live' : ''}`}>
-            <button
-              type="button"
-              className={`cc-talk-mic ${listening ? 'live' : ''}`}
-              onClick={() => void talk()}
-              title={t('chat.mic')}
-            >
-              <Icon name="action.mic" size={18} />
-            </button>
-            <input
-              className="cc-talk-input"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder={
-                listening
-                  ? t('chat.listeningHint')
-                  : t('chat.placeholderIdle', { wake: t('settings.wakeWord') })
-              }
-              disabled={listening}
-            />
-            <button className="cc-talk-send" type="submit" disabled={state.streaming || listening}>
-              {state.streaming ? '…' : t('chat.send')}
-            </button>
-          </div>
-          <div className="cc-talk-side">
-            <span className="cc-chip">{state.sessions.find((s) => s.id === state.activeId)?.title ?? 'oturum'}</span>
-            {state.streaming && <span className="cc-chip live">{t('chat.streaming')}</span>}
-          </div>
-        </form>
-      </div>
-    </div>
+    </AppShell>
   );
 }

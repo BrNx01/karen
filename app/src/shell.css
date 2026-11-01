@@ -1,0 +1,428 @@
+/* The frame: rail, stage, context panel, composer. Screens style themselves. */
+
+.shell {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 300px;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.shell:not(:has(.context)) {
+  grid-template-columns: 64px minmax(0, 1fr);
+}
+
+/* ---------- rail ---------- */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0 12px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  min-height: 0;
+}
+
+.rail-mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 12px;
+}
+.rail-mark img {
+  border-radius: 50%;
+  display: block;
+}
+
+.rail-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.rail-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail-item {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 160ms ease-out, color 160ms ease-out;
+}
+
+.rail-item:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.rail-item.active {
+  color: var(--text);
+  background: var(--raised);
+}
+
+/* The active marker: a 2 px bar on the rail edge, not a glow. */
+.rail-item.active::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.rail-item.live {
+  color: var(--accent-soft);
+}
+
+.rail-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  line-height: 15px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- main column ---------- */
+
+.main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.topbar-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.conn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.conn.on {
+  color: var(--ok);
+}
+.conn.off {
+  color: var(--muted);
+}
+
+.topbar-context {
+  display: none;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.stage {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+/* Screens were written for a full-height flex parent; the stage is that parent. */
+.stage > * {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.composer {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding: 10px 16px 12px;
+}
+
+/* ---------- context panel ---------- */
+
+/* The composer already owns its frame; the legacy talk bar just supplies the field. */
+.composer .cc-talk {
+  padding: 0;
+  border-top: 0;
+  background: none;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.composer .cc-talk-side {
+  order: -1;
+  padding-left: 4px;
+  min-height: 0;
+}
+
+.composer .cc-talk-side .cc-chip {
+  font-size: 10.5px;
+}
+
+/* The core reads as the app's mark, not as a word. */
+.cc-core-mark {
+  position: relative;
+  z-index: 1;
+  width: 68%;
+  max-width: 240px;
+  height: auto;
+  filter: drop-shadow(0 0 30px rgba(225, 29, 46, 0.4));
+}
+
+/* ---------- composites ---------- */
+
+/* The core panel lists six facts; they must all fit in a short row, so they tighten. */
+.cc-overview .cc-list {
+  gap: 0;
+}
+
+.cc-overview .cc-list li {
+  padding: 3px 4px;
+  gap: 8px;
+}
+
+.cc-overview .cc-ico {
+  width: 21px;
+  height: 21px;
+  border-radius: 7px;
+}
+
+.cc-overview .cc-list li b {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.cc-overview .cc-list li small {
+  font-size: 9.5px;
+  line-height: 1.2;
+}
+
+.cc-panel h3 {
+  margin: 0 0 8px;
+}
+
+/* Chart series: the only place the data hue appears, and it stays quiet. */
+.cc-bar i {
+  opacity: 0.7;
+}
+
+/* A 210 px monitor panel cannot hold four labelled bars: two columns of two. */
+.cc-monitor .cc-state-strip {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 10px;
+}
+
+.cc-monitor .cc-gauge-ring {
+  width: 46px;
+  height: 46px;
+}
+
+.cc-monitor .cc-gauge-ring span {
+  font-size: 12px;
+}
+
+.cc-monitor .cc-gauges {
+  gap: 6px;
+}
+
+.cc-monitor-facts {
+  display: none;
+}
+
+.context {
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  padding: 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+
+.context h3 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 600;
+}
+
+.context h3:not(:first-child) {
+  margin-top: 20px;
+}
+
+.context-empty {
+  margin: 0 0 4px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.context-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.context-list li {
+  display: grid;
+  gap: 1px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  min-width: 0;
+  cursor: default;
+}
+
+.context-list li.muted {
+  border-color: transparent;
+  background: none;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.context-list b {
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-list small {
+  color: var(--faint);
+  font-size: 11px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.context-list.feed b {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.context .approval-card,
+.context form {
+  max-width: 100%;
+}
+
+/* ---------- narrow: rail becomes a bottom bar, context a drawer ---------- */
+
+.shell.narrow {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.shell.narrow .rail {
+  order: 2;
+  flex-direction: row;
+  justify-content: space-around;
+  border-right: 0;
+  border-top: 1px solid var(--line);
+  padding: 6px 8px;
+}
+
+.shell.narrow .rail-mark,
+.shell.narrow .rail-foot {
+  display: none;
+}
+
+.shell.narrow .rail-items {
+  flex-direction: row;
+  margin-top: 0;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.shell.narrow .rail-item.active::before {
+  left: 10px;
+  right: 10px;
+  top: auto;
+  bottom: -6px;
+  width: auto;
+  height: 2px;
+}
+
+.shell.narrow .main {
+  order: 1;
+}
+
+.shell.narrow .topbar-context {
+  display: grid;
+}
+
+.shell.narrow .context {
+  display: none;
+  position: absolute;
+  inset: 0 0 0 30%;
+  z-index: 20;
+  border-left: 1px solid var(--line);
+}
+
+.shell.narrow.context-open .context {
+  display: block;
+}

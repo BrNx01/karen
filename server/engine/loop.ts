@@ -1,5 +1,6 @@
 import type { Approver } from './permissions.js';
 import { classify } from './permissions.js';
+import { COMPUTER_TOOLS, MAX_ACTIONS_PER_TURN } from './computer-policy.js';
 import { trimCrisis, trimHistory } from './history.js';
 import { toolDefs } from './tools/types.js';
 import type { Tool, ToolContext } from './tools/types.js';
@@ -47,6 +48,8 @@ export async function runAgent(opts: AgentOptions, messages: ChatMessage[]): Pro
   // The repeat counter lives across turns: the same call can arrive three turns in a row.
   let repeatKey = '';
   let repeats = 0;
+  // Input actions are counted across turns too: the cap is per user message, not per step.
+  let computerActions = 0;
 
   for (let turn = 0; turn < maxTurns; turn++) {
     if (opts.signal?.aborted) return { messages: history, stopReason: 'aborted' };
@@ -121,6 +124,22 @@ export async function runAgent(opts: AgentOptions, messages: ChatMessage[]): Pro
       }
 
       const args = (call.args ?? {}) as Record<string, unknown>;
+
+      // A turn may drive the machine, but not forever: 30 input actions and then it stops.
+      if (COMPUTER_TOOLS.has(call.name)) {
+        computerActions += 1;
+        if (computerActions > MAX_ACTIONS_PER_TURN) {
+          history.push({
+            role: 'tool',
+            content: `action limit reached (${MAX_ACTIONS_PER_TURN} per turn); stop and report what you did`,
+            toolCallId: call.id,
+          });
+          answerRest(i + 1, 'action limit reached');
+          opts.log.append('reflex', 'brain', opts.sessionId, { kind: 'action-limit', actions: computerActions });
+          return { messages: history, stopReason: 'aborted' };
+        }
+      }
+
       const verdict = classify({ tool: call.name, access: tool.access, args, cwd: opts.cwd });
       opts.log.append('tool_call', 'session', opts.sessionId, {
         tool: call.name,

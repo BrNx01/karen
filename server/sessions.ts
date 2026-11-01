@@ -18,6 +18,7 @@ import { memoryTools } from './engine/tools/memory.js';
 import { growthTools } from './engine/tools/growth.js';
 import type { ProposalStore } from './growth/store.js';
 import { computerTools } from './engine/tools/computer.js';
+import { computerControlTools } from './engine/tools/computer-control.js';
 import { speakTool } from './engine/tools/speak.js';
 import { stateTools } from './engine/tools/state.js';
 import { projectKey } from './project.js';
@@ -62,6 +63,8 @@ export type SessionDeps = {
   /** Offer ledger: the user is asked about the same preference only once. */
   preferences?: PreferenceStore;
   codeEditsEnabled?: boolean;
+  /** Direct mouse/keyboard control: `off` removes the tools, `ask`/`allow` expose them. */
+  computerControl?: 'off' | 'ask' | 'allow';
   dataDir?: string;
   identity?: () => string;
   /** Extra permitted roots (registered repos). */
@@ -313,6 +316,10 @@ export class SessionManager {
       // Computer access + voice: present in every session, they go through the permission class.
       tools.push(
         ...computerTools({ dataDir: this.deps.dataDir ?? join(homedir(), '.karen'), cwd: session.cwd }),
+        // Direct input is opt-in and never reaches an autonomous session.
+        ...(session.role === 'brain' && this.deps.computerControl !== 'off'
+          ? computerControlTools({ enabled: true })
+          : []),
         speakTool(),
       );
       if (session.role === 'brain') {

@@ -3,6 +3,58 @@
 This file follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-11-01
+
+A redesign rather than a feature drop: the app now looks and behaves like the thing it
+claims to be, and the first five minutes no longer require a manual.
+
+### Added
+
+- **New shell** — an icon rail, one stage, a contextual panel for approvals and agents,
+  and a composer that never scrolls away. Collapses to a bottom bar below 900 px.
+- **Arc-reactor icon** — one geometry source (`scripts/make-icon.mjs`) renders the app
+  icon, the site mark and the README mark, so they cannot drift.
+- **Settings as a control room** — eight sections (Model, Voice, Computer, Memory,
+  Autonomy, Interface, Setup, Advanced). A control ships only if something reads it.
+- **One-address provider detection** — paste an address, paste a key, press Detect:
+  KAREN infers the protocol, asks the endpoint for its models, and lists them with
+  context sizes. Two custom endpoints keep separate configs and keys.
+- **EVREN (SSB)** as a first-class provider preset.
+- **Offline neural voice** — Piper on the CPU with two female voices
+  (`tr_TR-dfki-medium`, `en_GB-alba-medium`), cached, adjustable speed, played server-side
+  so it works with the window closed. Downloaded and hash-verified on first run,
+  resumable, skippable; the OS voice remains a fallback, not the default.
+- **Direct computer control** — `mouse_move`, `mouse_click`, `scroll`, `type_text`,
+  `press_keys`, `window_list`, `window_focus`, with `ui_tree`/`ui_invoke` for
+  accessibility-element targeting. Three modes: off, ask, allow.
+- **Screenshot reading** for vision models.
+- **Demo profile and real captures** — `scripts/demo-profile.mjs` seeds a throwaway
+  profile; `scripts/capture.mjs` photographs the built app from Electron's offscreen
+  renderer, so the README shows real pixels without a real memory.
+
+### Changed
+
+- Palette is quieter: near-black surfaces, one accent, the data hue reserved for charts.
+  Gradients and shadows removed except on the core orb.
+- Every glyph is a hand-drawn SVG; the interface contains no emoji.
+- Turkish runtime strings are now English; the interface dictionary does the translating.
+- The README is rebuilt around real screenshots, honest claims and a short download path.
+
+### Security
+
+- Computer actions ask by default. `allow` still asks for typed credentials (by shape and
+  by matching a stored secret) and for closing or moving a window.
+- A turn stops after 30 input actions; `Ctrl+Alt+K` stops KAREN from anywhere, including
+  with the window hidden.
+- Autonomous sessions never receive the computer tools.
+- The voice downloader verifies every file against a pinned SHA-256 and retries once.
+
+### Fixed
+
+- The updater module was truncated in 1.0.0, so the packaged app died on launch.
+- Native modules are rebuilt for Electron before packaging, so the installed app starts.
+- `ctrl+shift+t` pressed only the modifiers: letter and digit virtual keys were missing.
+
 ## [1.0.0] — 2026-10-31
 
 First public release. A local agent hub with a second brain, published as **KAREN** (the project

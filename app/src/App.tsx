@@ -17,7 +17,7 @@ import { Icon } from './icons.js';
 import { localeTag, osLocaleTag } from './locale.js';
 import { resolveLocale, type Locale, type LocaleSetting } from '../../shared/i18n/index.js';
 import { startWakeWord, wakeWordSupported, isFatalWakeError, wakeErrorText } from './wake.js';
-import { speakInBrowser, stopSpeaking } from './speech.js';
+import { speakInBrowser, speakWithVoice, stopSpeaking } from './speech.js';
 import type { SessionInfo } from '../../server/sessions.js';
 import type { Repo } from '../../server/repos.js';
 import type { InstalledSkill } from '../../server/skills.js';
@@ -431,6 +431,9 @@ function AppBody(props: { locale: Locale; onLocaleChange: (locale: Locale) => vo
 
   async function speakText(text: string) {
     const { voiceName, voiceLang } = settingsRef.current;
+    // KAREN's own voice first (offline Piper); the OS voice is the fallback, not the default.
+    const engine = await speakWithVoice(text, { lang: voiceLang, url: withToken('/api/voice/audio') });
+    if (engine === 'neural') return;
     if (speakInBrowser(text, { lang: voiceLang, voiceName })) return;
     try {
       const res = await fetch(withToken('/api/voice/speak'), {

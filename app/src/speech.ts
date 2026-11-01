@@ -68,4 +68,51 @@ export function speakInBrowser(
 
 export function stopSpeaking(): void {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  stopNeural();
+}
+
+// ---------- the offline neural voice ----------
+
+let neural: HTMLAudioElement | null = null;
+
+/**
+ * Plays KAREN's own voice (Piper, downloaded on first run) through the server. Falls
+ * back to the browser voice when the engine is not installed, so speech never dies —
+ * it only changes quality.
+ */
+export async function speakWithVoice(
+  text: string,
+  opts: { lang: 'tr-TR' | 'en-US'; url: string; onEnd?: () => void },
+): Promise<'neural' | 'browser'> {
+  const clean = text.replace(/```[\s\S]*?```/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 900);
+  if (clean === '') return 'browser';
+
+  try {
+    const response = await fetch(`${opts.url}${opts.url.includes('?') ? '&' : '?'}text=${encodeURIComponent(clean)}&lang=${opts.lang}`);
+    if (response.ok && response.headers.get('content-type')?.includes('audio/wav')) {
+      const blob = await response.blob();
+      const audio = new Audio(URL.createObjectURL(blob));
+      neural = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(audio.src);
+        neural = null;
+        opts.onEnd?.();
+      };
+      await audio.play();
+      return 'neural';
+    }
+  } catch {
+    // No engine, no network to localhost, or a blocked autoplay: use the OS voice.
+  }
+
+  void speakInBrowser(clean, { lang: opts.lang, onEnd: opts.onEnd });
+  return 'browser';
+}
+
+export function stopNeural(): void {
+  if (neural) {
+    neural.pause();
+    URL.revokeObjectURL(neural.src);
+    neural = null;
+  }
 }
